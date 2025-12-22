@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYSENT - Static Analysis</title>
+    <link rel="icon" type="image/x-icon" href="../public/img/favicon.ico" />
+    <link rel="icon" type="image/png" href="../public/img/logo.png" />
+    <link rel="stylesheet" type="text/css" href="../css/dashboard.css" />
+    <link rel="stylesheet" type="text/css" href="../css/static-analysis.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="../js/funny-loader.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <img src="../public/img/logo.png" alt="CYSENT Logo" class="sidebar-logo">
+            <span class="sidebar-title">CYSENT</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="sidebar-item">
+                <i class="fas fa-th-large"></i>
+                <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="#" class="sidebar-item active">
+                <i class="fas fa-upload"></i>
+                <span class="sidebar-text">Upload File</span>
+            </a>
+            <a href="#" class="sidebar-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span class="sidebar-text">Settings</span>
+            </a>
+        </nav>
+        
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Static Analysis</h1>
+                <p class="header-subtitle">Upload and analyze malware samples</p>
+            </div>
+            <div class="header-right">
+                <div class="user-profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="user-name">User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Analysis Content -->
+        <div class="analysis-content">
+            <!-- Upload Section -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-container">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h2>Upload Malware Sample</h2>
+                    <p class="upload-subtitle">Drop your file here or click to browse</p>
+                    
+                    <div class="upload-area" id="uploadArea">
+                        <input type="file" id="fileInput" accept="*/*" hidden>
+                        <div class="upload-placeholder">
+                            <i class="fas fa-file-upload"></i>
+                            <p>Drag & drop your file here</p>
+                            <span>or</span>
+                            <button class="btn-browse">Browse Files</button>
+                        </div>
+                    </div>
+
+                    <div class="supported-types">
+                        <h4>Supported File Types:</h4>
+                        <div class="type-badges">
+                            <span class="type-badge"><i class="fas fa-file-code"></i> PE (Windows)</span>
+                            <span class="type-badge"><i class="fas fa-file-alt"></i> ELF (Linux)</span>
+                            <span class="type-badge"><i class="fas fa-file-pdf"></i> PDF Documents</span>
+                            <span class="type-badge"><i class="fas fa-file-word"></i> Office Files</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Analysis Results Section (Initially Hidden) -->
+            <section class="results-section" id="resultsSection" style="display: none;">
+                <div class="results-header">
+                    <button class="btn-back" id="btnBack">
+                        <i class="fas fa-arrow-left"></i>
+                        <span>Upload New File</span>
+                    </button>
+                    <div id="dynamicAnalysisBtn" class="btn-dynamic-analysis" style="display: none;">
+                        <button class="btn-secondary">
+                            <i class="fas fa-play-circle"></i>
+                            <span>Go to Dynamic Analysis</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- File Info Card -->
+                <div class="info-card">
+                    <div class="card-header" data-toggle="file-info">
+                        <h3><i class="fas fa-file"></i> File Information</h3>
+                        <div class="header-right">
+                            <span class="file-type-badge" id="fileTypeBadge">Unknown</span>
+                            <i class="fas fa-chevron-down toggle-arrow"></i>
+                        </div>
+                    </div>
+                    <div class="card-body collapsible" id="file-info-body">
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">File Name</span>
+                                <span class="info-value" id="fileName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">File Size</span>
+                                <span class="info-value" id="fileSize">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">File Type</span>
+                                <span class="info-value" id="fileType">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Upload Date</span>
+                                <span class="info-value" id="uploadDate">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hash Values Card -->
+                <div class="info-card">
+                    <div class="card-header" data-toggle="hash-values">
+                        <h3><i class="fas fa-fingerprint"></i> Hash Values</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="hash-values-body">
+                        <div class="hash-list">
+                            <div class="hash-item">
+                                <div class="hash-label">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>MD5</span>
+                                </div>
+                                <div class="hash-value">
+                                    <code id="md5Hash">Calculating...</code>
+                                    <button class="btn-copy" data-hash="md5">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="hash-item">
+                                <div class="hash-label">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>SHA-1</span>
+                                </div>
+                                <div class="hash-value">
+                                    <code id="sha1Hash">Calculating...</code>
+                                    <button class="btn-copy" data-hash="sha1">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="hash-item">
+                                <div class="hash-label">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>SHA-256</span>
+                                </div>
+                                <div class="hash-value">
+                                    <code id="sha256Hash">Calculating...</code>
+                                    <button class="btn-copy" data-hash="sha256">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="hash-item">
+                                <div class="hash-label">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>SHA-512</span>
+                                </div>
+                                <div class="hash-value">
+                                    <code id="sha512Hash">Calculating...</code>
+                                    <button class="btn-copy" data-hash="sha512">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="hash-item">
+                                <div class="hash-label">
+                                    <i class="fas fa-hashtag"></i>
+                                    <span>BLAKE2b</span>
+                                </div>
+                                <div class="hash-value">
+                                    <code id="blake2bHash">Calculating...</code>
+                                    <button class="btn-copy" data-hash="blake2b">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Entropy Card -->
+                <div class="info-card">
+                    <div class="card-header" data-toggle="entropy">
+                        <h3><i class="fas fa-chart-line"></i> File Entropy Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="entropy-body">
+                        <div class="entropy-display">
+                            <div class="entropy-value-container">
+                                <div class="entropy-number" id="entropyValue">-</div>
+                                <div class="entropy-bar">
+                                    <div class="entropy-fill" id="entropyFill"></div>
+                                </div>
+                                <div class="entropy-status" id="entropyStatus">-</div>
+                            </div>
+                            <div class="entropy-info">
+                                <p><i class="fas fa-info-circle"></i> Entropy measures file randomness (0-8 scale)</p>
+                                <ul>
+                                    <li><strong>High (7.5-8):</strong> Likely encrypted or packed</li>
+                                    <li><strong>Medium (6-7.5):</strong> Compressed content</li>
+                                    <li><strong>Low (0-6):</strong> Plain text or simple code</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PE Analysis Card (shown only for PE files) -->
+                <div class="info-card" id="peAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="pe-analysis">
+                        <h3><i class="fas fa-cogs"></i> PE Header Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="pe-analysis-body">
+                        <div class="pe-info" id="peInfo">
+                            <!-- PE analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CAPA Capability Analysis Card (shown only for PE files) -->
+                <div class="info-card" id="capaAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="capa-analysis">
+                        <h3><i class="fas fa-shield-virus"></i> Capability Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="capa-analysis-body">
+                        <div class="capa-info" id="capaInfo">
+                            <!-- CAPA analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PE Structure Analysis Card (shown only for PE files) -->
+                <div class="info-card" id="peStructureCard" style="display: none;">
+                    <div class="card-header" data-toggle="pe-structure">
+                        <h3><i class="fas fa-sitemap"></i> PE Structure Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="pe-structure-body">
+                        <div class="pe-structure-info" id="peStructureInfo">
+                            <!-- PE structure analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Analysis Card (shown only for PDF files) -->
+                <div class="info-card" id="pdfAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="pdf-analysis">
+                        <h3><i class="fas fa-file-pdf"></i> PDF Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="pdf-analysis-body">
+                        <div class="pdf-info" id="pdfInfo">
+                            <!-- PDF analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PDF Obfuscation Analysis Card (shown only for PDF files) -->
+                <div class="info-card" id="pdfObfuscationCard" style="display: none;">
+                    <div class="card-header" data-toggle="pdf-obfuscation">
+                        <h3><i class="fas fa-mask"></i> PDF Obfuscation & Malicious Indicators</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="pdf-obfuscation-body">
+                        <div class="pdf-obfuscation-info" id="pdfObfuscationInfo">
+                            <!-- PDF obfuscation analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strings Analysis Card -->
+                <div class="info-card" id="stringsAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="strings-analysis">
+                        <h3><i class="fas fa-text-height"></i> Strings & Indicators Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="strings-analysis-body">
+                        <div class="strings-info" id="stringsInfo">
+                            <!-- Strings analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VirusTotal Analysis Card -->
+                <div class="info-card" id="virusTotalCard" style="display: none;">
+                    <div class="card-header" data-toggle="virustotal-analysis">
+                        <h3><i class="fas fa-shield-virus"></i> VirusTotal Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="virustotal-analysis-body">
+                        <div class="vt-info" id="vtInfo">
+                            <!-- VirusTotal analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analysis Actions -->
+                <div class="analysis-actions">
+                    <button class="btn-action btn-primary">
+                        <i class="fas fa-search"></i>
+                        <span>Start Deep Analysis</span>
+                    </button>
+                    <button class="btn-action btn-secondary">
+                        <i class="fas fa-download"></i>
+                        <span>Export Report</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Warning Message (Initially Hidden) -->
+            <div class="warning-message" id="warningMessage" style="display: none;">
+                <div class="warning-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>Unsupported File Type</h3>
+                <p id="warningText">This file type is not currently supported for analysis.</p>
+                <button class="btn-dismiss" id="btnDismissWarning">Try Another File</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- CAPA Rule Detail Modal -->
+    <div id="capaRuleModal" class="modal" style="display: none;">
+        <div class="modal-content capa-rule-modal">
+            <div class="modal-header">
+                <h2><i class="fas fa-file-code"></i> <span id="modalRuleName">Rule Details</span></h2>
+                <button class="modal-close" onclick="closeCapaRuleModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rule-meta">
+                    <span class="rule-namespace" id="modalRuleNamespace"></span>
+                </div>
+                <pre id="modalRuleContent" class="rule-yaml-content"><code></code></pre>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/static-analysis.js"></script>
+</body>
+</html>

@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYSENT - Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="../public/img/favicon.ico" />
+    <link rel="icon" type="image/png" href="../public/img/logo.png" />
+    <link rel="stylesheet" type="text/css" href="../css/dashboard.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="../js/funny-loader.js"></script>
+</head>
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar collapsed" id="sidebar">
+        <div class="sidebar-header">
+            <img src="../public/img/logo.png" alt="CYSENT Logo" class="sidebar-logo">
+            <span class="sidebar-title">CYSENT</span>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="dashboard.html" class="sidebar-item active" data-page="dashboard">
+                <i class="fas fa-th-large"></i>
+                <span class="sidebar-text">Dashboard</span>
+            </a>
+            <a href="static-analysis.html" class="sidebar-item" data-page="upload">
+                <i class="fas fa-upload"></i>
+                <span class="sidebar-text">Upload File</span>
+            </a>
+            <a href="#" class="sidebar-item" data-page="settings">
+                <i class="fas fa-cog"></i>
+                <span class="sidebar-text">Settings</span>
+            </a>
+        </nav>
+        
+        <button class="sidebar-toggle" id="sidebarToggle">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div class="header-left">
+                <h1>Dashboard</h1>
+                <p class="header-subtitle">Welcome back to CYSENT</p>
+            </div>
+            <div class="header-right">
+                <div class="user-profile">
+                    <i class="fas fa-user-circle"></i>
+                    <span class="user-name">User</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+            <!-- Create New Project Button -->
+            <div class="create-project-section">
+                <button class="btn-create-project" id="btnCreateProject">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>Create New Project</span>
+                </button>
+            </div>
+
+            <!-- Projects Section -->
+            <section class="projects-section">
+                <div class="section-header">
+                    <h2>Your Projects</h2>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Projects Container -->
+                <div class="projects-container" id="projectsContainer">
+                    <!-- Sample Project Cards -->
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-icon">
+                                <i class="fas fa-file-code"></i>
+                            </div>
+                            <div class="project-status status-completed">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed</span>
+                            </div>
+                        </div>
+                        <div class="project-body">
+                            <h3 class="project-title">Malware Analysis #001</h3>
+                            <p class="project-description">Static analysis of suspicious PE file</p>
+                            <div class="project-meta">
+                                <span><i class="far fa-clock"></i> 2 days ago</span>
+                                <span><i class="fas fa-tag"></i> Static</span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <button class="btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn-delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-icon">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="project-status status-in-progress">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <span>In Progress</span>
+                            </div>
+                        </div>
+                        <div class="project-body">
+                            <h3 class="project-title">PDF Analysis #002</h3>
+                            <p class="project-description">Analyzing suspicious PDF document</p>
+                            <div class="project-meta">
+                                <span><i class="far fa-clock"></i> 1 hour ago</span>
+                                <span><i class="fas fa-tag"></i> Both</span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <button class="btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn-delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+
+                    <div class="project-card">
+                        <div class="project-header">
+                            <div class="project-icon">
+                                <i class="fas fa-file-alt"></i>
+                            </div>
+                            <div class="project-status status-completed">
+                                <i class="fas fa-check-circle"></i>
+                                <span>Completed</span>
+                            </div>
+                        </div>
+                        <div class="project-body">
+                            <h3 class="project-title">ELF Binary #003</h3>
+                            <p class="project-description">Linux malware sample analysis</p>
+                            <div class="project-meta">
+                                <span><i class="far fa-clock"></i> 5 days ago</span>
+                                <span><i class="fas fa-tag"></i> Dynamic</span>
+                            </div>
+                        </div>
+                        <div class="project-footer">
+                            <button class="btn-view"><i class="fas fa-eye"></i> View</button>
+                            <button class="btn-delete"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Create Project Modal -->
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-container">
+            <button class="modal-close" id="modalClose">
+                <i class="fas fa-times"></i>
+            </button>
+            
+            <div class="modal-header">
+                <img src="../public/img/logo_text.png" alt="CYSENT" class="modal-logo">
+                <h2>Create New Project</h2>
+                <p>Choose your analysis type</p>
+            </div>
+
+            <div class="modal-body">
+                <div class="analysis-options">
+                    <div class="analysis-option" data-type="static">
+                        <div class="option-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3>Static Analysis</h3>
+                        <p>Analyze file structure, headers, strings, and signatures without execution</p>
+                        <div class="option-badge">Available</div>
+                    </div>
+
+                    <div class="analysis-option" data-type="dynamic">
+                        <div class="option-icon">
+                            <i class="fas fa-play-circle"></i>
+                        </div>
+                        <h3>Dynamic Analysis</h3>
+                        <p>Execute and monitor malware behavior in a controlled sandbox environment</p>
+                        <div class="option-badge badge-disabled">Coming Soon</div>
+                    </div>
+
+                    <div class="analysis-option" data-type="both">
+                        <div class="option-icon">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                        <h3>Both Analyses</h3>
+                        <p>Comprehensive analysis combining static and dynamic methods</p>
+                        <div class="option-badge">Available</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/dashboard.js"></script>
+</body>
+</html>
