@@ -11,6 +11,7 @@ import hashlib
 import subprocess
 import json
 from decimal import Decimal
+from .cvss_calculator import CVSSCalculator
 
 # Import pdfid from local utils
 try:
@@ -47,7 +48,6 @@ def analyze_pdf_structure(file_path):
         
         analysis = {
             'suspicious_elements': [],
-            'risk_score': 0,
             'metadata': {},
             'entropy': {},
             'warnings': []
@@ -63,7 +63,6 @@ def analyze_pdf_structure(file_path):
                 analysis['metadata']['pdf_version'] = version
                 if not re.match(r'%PDF-1\.\d', version):
                     analysis['suspicious_elements'].append(f'Invalid PDF version: {version}')
-                    analysis['risk_score'] += 2
             
             # JavaScript
             elif "/JS " in line and len(parts) > 2:
@@ -71,8 +70,6 @@ def analyze_pdf_structure(file_path):
                 if js_count > 0:
                     analysis['metadata']['javascript_count'] = js_count
                     analysis['suspicious_elements'].append(f'Contains JavaScript ({js_count} instances)')
-                    # JavaScript in PDFs is high risk
-                    analysis['risk_score'] += 4 if js_count > 1 else 3
             
             # AcroForm
             elif "/AcroForm " in line and len(parts) > 2:
@@ -80,15 +77,12 @@ def analyze_pdf_structure(file_path):
                 if acroform_count > 0:
                     analysis['metadata']['acroform_count'] = acroform_count
                     analysis['suspicious_elements'].append('Contains AcroForm')
-                    analysis['risk_score'] += 1
             # Automatic Actions
             elif "/AA " in line and len(parts) > 2:
                 aa_count = int(parts[2])
                 if aa_count > 0:
                     analysis['metadata']['auto_action_count'] = aa_count
                     analysis['suspicious_elements'].append('Contains Automatic Actions')
-                    # Auto actions are very suspicious
-                    analysis['risk_score'] += 4
             
             # OpenAction
             elif "/OpenAction " in line and len(parts) > 2:
@@ -96,8 +90,6 @@ def analyze_pdf_structure(file_path):
                 if oa_count > 0:
                     analysis['metadata']['open_action_count'] = oa_count
                     analysis['suspicious_elements'].append('Contains OpenAction')
-                    # OpenAction is suspicious
-                    analysis['risk_score'] += 3
             
             # Launch Action
             elif "/Launch " in line and len(parts) > 2:
@@ -105,8 +97,6 @@ def analyze_pdf_structure(file_path):
                 if launch_count > 0:
                     analysis['metadata']['launch_count'] = launch_count
                     analysis['suspicious_elements'].append('Contains Launch Action (CRITICAL)')
-                    # Launch is CRITICAL - can execute programs
-                    analysis['risk_score'] += 6
             
             # Embedded Files
             elif "/EmbeddedFiles " in line and len(parts) > 2:
@@ -114,7 +104,6 @@ def analyze_pdf_structure(file_path):
                 if embed_count > 0:
                     analysis['metadata']['embedded_files'] = embed_count
                     analysis['suspicious_elements'].append(f'Contains embedded files ({embed_count})')
-                    analysis['risk_score'] += 2
             
             # Entropy analysis
             elif "Total entropy:" in line and len(parts) > 3:
@@ -136,16 +125,6 @@ def analyze_pdf_structure(file_path):
         
         # Analyze page counts
         analyze_page_counts(analysis)
-        
-        # Determine risk level
-        if analysis['risk_score'] >= 10:
-            analysis['risk_level'] = 'CRITICAL'
-        elif analysis['risk_score'] >= 6:
-            analysis['risk_level'] = 'HIGH'
-        elif analysis['risk_score'] >= 3:
-            analysis['risk_level'] = 'MEDIUM'
-        else:
-            analysis['risk_level'] = 'LOW'
         
         return analysis
         
@@ -172,16 +151,13 @@ def analyze_pdf_entropy(analysis):
     # High total entropy is VERY suspicious for PDFs
     if total >= 7.8:
         analysis['warnings'].append('CRITICAL: Very high entropy detected - likely encrypted/packed malware')
-        analysis['risk_score'] += 5
     elif total >= 7.0:
         analysis['warnings'].append('HIGH: High entropy detected - possible encryption/packing')
-        analysis['risk_score'] += 3
     
     # Check for suspicious entropy patterns
     # Low entropy (possible NOP-sled or padding)
     if total <= 2.0 or inside <= 2.0:
         analysis['warnings'].append('LOW entropy detected - possible obfuscation or padding')
-        analysis['risk_score'] += 2
     
     # Outside entropy of 0 with high inside entropy is EXTREMELY suspicious
 def analyze_page_counts(analysis):
@@ -199,14 +175,11 @@ def analyze_page_counts(analysis):
     # Only flag if combined with other suspicious elements
     if page_count == 1 and len(analysis.get('suspicious_elements', [])) > 0:
         analysis['warnings'].append('Single page PDF with suspicious elements')
-        analysis['risk_score'] += 1
     
     if page_count == 0 and pages_object == 0:
         analysis['warnings'].append('Both /Page and /Pages = 0 (suspicious)')
-        analysis['risk_score'] += 3
     elif page_count == 0 and pages_object > 0:
         analysis['warnings'].append('No individual pages defined')
-        analysis['risk_score'] += 2
 
 
 def scan_pdf_with_yara(file_path):
@@ -221,7 +194,6 @@ def scan_pdf_with_yara(file_path):
     """
     yara_results = {
         'matches': [],
-        'total_score': 0,
         'rule_count': 0
     }
     
@@ -254,22 +226,10 @@ def scan_pdf_with_yara(file_path):
                 
                 match_info = {
                     'rule': rule_name,
-                    'tags': [],
-                    'weight': 1  # Default weight
+                    'tags': ['PDF']
                 }
                 
-                # Assign weights based on rule name patterns
-                if 'exploit' in rule_name.lower() or 'malicious' in rule_name.lower():
-                    match_info['weight'] = 5
-                elif 'suspicious' in rule_name.lower() or 'obfuscation' in rule_name.lower():
-                    match_info['weight'] = 3
-                elif 'invalid' in rule_name.lower() or 'anomaly' in rule_name.lower():
-                    match_info['weight'] = 2
-                
-                match_info['tags'] = ['PDF']
-                
                 yara_results['matches'].append(match_info)
-                yara_results['total_score'] += match_info['weight']
                 yara_results['rule_count'] += 1
         
     except subprocess.TimeoutExpired:
@@ -292,8 +252,7 @@ def analyze_with_peepdf(file_path):
     """
     peepdf_results = {
         'info': {},
-        'suspicious_elements': [],
-        'risk_score': 0
+        'suspicious_elements': []
     }
     
     if not os.path.exists(PEEPDF_PY):
@@ -333,7 +292,6 @@ def analyze_with_peepdf(file_path):
                 peepdf_results['info']['encrypted'] = encrypted
                 if encrypted == 'True':
                     peepdf_results['suspicious_elements'].append('PDF is encrypted')
-                    peepdf_results['risk_score'] += 2
             elif line.startswith('Objects:'):
                 peepdf_results['info']['objects'] = line.split(':', 1)[1].strip()
             elif line.startswith('Streams:'):
@@ -342,12 +300,10 @@ def analyze_with_peepdf(file_path):
                 uris = line.split(':', 1)[1].strip()
                 if int(uris) > 0:
                     peepdf_results['suspicious_elements'].append(f'Contains {uris} URIs')
-                    peepdf_results['risk_score'] += int(uris)
             elif line.startswith('Errors:'):
                 errors = line.split(':', 1)[1].strip()
                 if int(errors) > 0:
                     peepdf_results['suspicious_elements'].append(f'{errors} parsing errors')
-                    peepdf_results['risk_score'] += int(errors) * 2
         
     except subprocess.TimeoutExpired:
         peepdf_results['error'] = 'peepdf analysis timed out'
@@ -388,30 +344,28 @@ def get_comprehensive_pdf_analysis(file_path):
     yara_results = scan_pdf_with_yara(file_path)
     results['yara'] = yara_results
     
-    # Combine risk scores from all sources
-    total_risk_score = structure_analysis.get('risk_score', 0) + yara_results.get('total_score', 0) + peepdf_analysis.get('risk_score', 0)
+    # Calculate CVSS-based risk score
+    cvss_result = CVSSCalculator.calculate_pdf_score(results)
     
-    # Get YARA hits count and entropy
-    yara_hits = yara_results.get('rule_count', 0)
-    entropy_total = structure_analysis.get('entropy', {}).get('total_entropy', 0)
+    # Add CVSS results to output
+    results['cvss_score'] = cvss_result['cvss_score']
+    results['severity'] = cvss_result['severity']
+    results['threat_level'] = cvss_result['threat_level']
+    results['contributing_factors'] = cvss_result['contributing_factors']
+    results['recommendation'] = CVSSCalculator.get_recommendation(cvss_result)
     
-    # Overall assessment
-    suspicious_count = len(structure_analysis.get('suspicious_elements', []))
-    # Enhanced verdict logic
-    if yara_hits >= 2 or total_risk_score >= 12 or (entropy_total >= 7.9 and suspicious_count >= 1):
+    # Determine verdict based on CVSS severity
+    severity = cvss_result['severity']
+    if severity == 'Critical':
         results['verdict'] = 'MALICIOUS - High confidence'
-        results['risk_level'] = 'CRITICAL'
-    elif yara_hits >= 1 or total_risk_score >= 8 or (entropy_total >= 7.5 and suspicious_count >= 2):
-        results['verdict'] = 'SUSPICIOUS - Further analysis recommended'
-        results['risk_level'] = 'HIGH'
-    elif total_risk_score >= 4 or suspicious_count >= 2:
-        results['verdict'] = 'QUESTIONABLE - Manual review suggested'
-        results['risk_level'] = 'MEDIUM'
+    elif severity == 'High':
+        results['verdict'] = 'DANGEROUS - Further analysis recommended'
+    elif severity == 'Medium':
+        results['verdict'] = 'SUSPICIOUS - Manual review suggested'
+    elif severity == 'Low':
+        results['verdict'] = 'QUESTIONABLE - Proceed with caution'
     else:
-        results['verdict'] = 'LIKELY SAFE - Standard PDF structure'
-        results['risk_level'] = 'LOW'
-    
-    results['total_risk_score'] = total_risk_score
+        results['verdict'] = 'SAFE - No significant threats detected'
     
     return results
 

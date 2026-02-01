@@ -401,6 +401,58 @@ def upload_file(current_user):
                 import traceback
                 traceback.print_exc()
                 response_data['pe_structure'] = {'error': str(dumpbin_error)}
+            
+            # Calculate overall CVSS score for PE file
+            try:
+                print("="*60)
+                print("CALCULATING CVSS SCORE FOR PE FILE")
+                print("="*60)
+                from utils.cvss_calculator import CVSSCalculator
+                
+                # Create a combined analysis object for CVSS calculation
+                pe_combined_analysis = {
+                    'pe_header': response_data.get('pe_analysis', {}),
+                    'capa': response_data.get('capa_analysis', {}),
+                    'die': response_data.get('pe_analysis', {}).get('die_analysis', {}),
+                    'strings': response_data.get('strings_analysis', {})
+                }
+                
+                print(f"PE Combined Analysis Keys: {pe_combined_analysis.keys()}")
+                print(f"CAPA success: {pe_combined_analysis.get('capa', {}).get('success')}")
+                
+                cvss_result = CVSSCalculator.calculate_pe_score(pe_combined_analysis)
+                print(f"✓ CVSS Score calculated: {cvss_result['cvss_score']}/10.0")
+                print(f"✓ Severity: {cvss_result['severity']}")
+                
+                # Add CVSS score to top level for easy access
+                response_data['cvss_score'] = cvss_result['cvss_score']
+                response_data['severity'] = cvss_result['severity']
+                response_data['threat_level'] = cvss_result['threat_level']
+                response_data['contributing_factors'] = cvss_result['contributing_factors']
+                response_data['recommendation'] = CVSSCalculator.get_recommendation(cvss_result)
+                
+                # Determine verdict based on CVSS severity
+                severity = cvss_result['severity']
+                if severity == 'Critical':
+                    response_data['verdict'] = 'MALICIOUS - High confidence'
+                elif severity == 'High':
+                    response_data['verdict'] = 'DANGEROUS - Further analysis recommended'
+                elif severity == 'Medium':
+                    response_data['verdict'] = 'SUSPICIOUS - Manual review suggested'
+                elif severity == 'Low':
+                    response_data['verdict'] = 'QUESTIONABLE - Proceed with caution'
+                else:
+                    response_data['verdict'] = 'SAFE - No significant threats detected'
+                
+                # Store in database
+                analysis_data['cvss_score'] = cvss_result['cvss_score']
+                analysis_data['severity'] = cvss_result['severity']
+                analysis_data['verdict'] = response_data['verdict']
+                
+            except Exception as cvss_error:
+                print(f"Exception in CVSS calculation: {cvss_error}")
+                import traceback
+                traceback.print_exc()
         
         # Add PDF analysis for PDF files
         elif file_type == 'PDF':
@@ -414,6 +466,16 @@ def upload_file(current_user):
                 if 'error' not in pdf_analysis:
                     response_data['pdf_analysis'] = pdf_analysis
                     analysis_data['pdf_analysis'] = pdf_analysis
+                    
+                    # Extract CVSS score to top level for easy access
+                    if 'cvss_score' in pdf_analysis:
+                        response_data['cvss_score'] = pdf_analysis['cvss_score']
+                        response_data['severity'] = pdf_analysis.get('severity', 'Unknown')
+                        response_data['threat_level'] = pdf_analysis.get('threat_level', 'Unknown')
+                        response_data['verdict'] = pdf_analysis.get('verdict', 'Unknown')
+                        response_data['recommendation'] = pdf_analysis.get('recommendation', '')
+                        analysis_data['cvss_score'] = pdf_analysis['cvss_score']
+                        analysis_data['severity'] = pdf_analysis.get('severity')
             except Exception as pdf_error:
                 response_data['pdf_analysis'] = {'error': str(pdf_error)}
             

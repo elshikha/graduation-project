@@ -212,6 +212,19 @@ function showResultsFromServer(file, data) {
     warningMessage.style.display = 'none';
     resultsSection.style.display = 'block';
     
+    // Store analysis data globally for CVSS access
+    window.currentAnalysisData = data;
+    
+    // Log CVSS score if available
+    if (data.cvss_score !== undefined) {
+        console.log('CVSS Score received:', data.cvss_score);
+        console.log('Severity:', data.severity);
+        console.log('Verdict:', data.verdict);
+        
+        // Display CVSS card if score is available
+        displayCVSSCard(data);
+    }
+    
     // Populate file info
     document.getElementById('fileName').textContent = data.filename;
     document.getElementById('fileSize').textContent = formatFileSize(data.file_size);
@@ -1558,6 +1571,83 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Display standalone CVSS Risk Card
+function displayCVSSCard(data) {
+    const cvssCard = document.getElementById('cvssCard');
+    const cvssContent = document.getElementById('cvssContent');
+    
+    if (!cvssCard || !cvssContent) return;
+    
+    const cvssScore = data.cvss_score;
+    const severity = data.severity || 'None';
+    const threatLevel = data.threat_level || 'Safe';
+    const verdict = data.verdict || 'No threats detected';
+    const recommendation = data.recommendation || '';
+    
+    if (cvssScore === undefined) {
+        cvssCard.style.display = 'none';
+        return;
+    }
+    
+    // Generate CVSS HTML
+    let html = `
+        <div class="cvss-risk-box cvss-${severity.toLowerCase()}">
+            <div class="cvss-header">
+                <i class="fas fa-shield-alt"></i> CVSS Risk Assessment
+            </div>
+            <div class="cvss-score-display">
+                <div class="cvss-score-circle">
+                    <div class="cvss-score-value">${cvssScore.toFixed(1)}</div>
+                    <div class="cvss-score-max">/10.0</div>
+                </div>
+                <div class="cvss-details">
+                    <div class="cvss-severity">${severity.toUpperCase()}</div>
+                    <div class="cvss-threat-level">${threatLevel}</div>
+                    <div class="cvss-verdict">${verdict}</div>
+                </div>
+            </div>
+    `;
+    
+    // Add contributing factors if available
+    if (data.contributing_factors && data.contributing_factors.length > 0) {
+        html += `
+            <div class="cvss-factors">
+                <h4><i class="fas fa-list-ul"></i> Threat Indicators</h4>
+                <div class="factors-list">
+        `;
+        
+        data.contributing_factors.slice(0, 5).forEach(factor => {
+            const indicatorName = factor.indicator.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            html += `
+                <div class="factor-item">
+                    <span class="factor-name">${indicatorName}</span>
+                    <span class="factor-impact">+${factor.contribution.toFixed(1)} pts</span>
+                </div>
+            `;
+        });
+        
+        html += `
+                </div>
+            </div>
+        `;
+    }
+    
+    // Add recommendation
+    if (recommendation) {
+        html += `
+            <div class="cvss-recommendation">
+                <i class="fas fa-info-circle"></i>
+                <span>${recommendation}</span>
+            </div>
+        `;
+    }
+    
+    html += `</div>`;
+    
+    cvssContent.innerHTML = html;
+    cvssCard.style.display = 'block';
+}
+
 // ============= CAPA ANALYSIS HTML GENERATION =============
 
 function generateCapaAnalysisHTML(capaData) {
@@ -2100,20 +2190,8 @@ function formatFeatureValue(value) {
 function generatePEStructureHTML(peStructure) {
     let html = '';
     
-    // Overall Risk Summary
-    html += `<div class="pe-structure-summary">
-        <div class="risk-summary-box">
-            <div class="risk-info">
-                <div class="risk-label">Overall Risk Assessment</div>
-                <div class="risk-value risk-${peStructure.overall_risk_level?.toLowerCase() || 'low'}">${peStructure.overall_risk_level || 'LOW'}</div>
-            </div>
-            <div class="risk-score-box">
-                <div class="score-label">Risk Score</div>
-                <div class="score-value">${peStructure.overall_risk_score || 0}</div>
-                <div class="score-max">/100</div>
-            </div>
-        </div>
-    </div>`;
+    // Remove CVSS display from here - it's now standalone
+    // Just show the PE structure data
     
     // Imports Analysis
     if (peStructure.imports && !peStructure.imports.error) {
