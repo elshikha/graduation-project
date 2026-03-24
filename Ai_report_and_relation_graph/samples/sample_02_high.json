@@ -1,0 +1,49 @@
+{
+    "metadata": {
+        "sample_id": "SAMPLE-002",
+        "file_type": "EXE",
+        "analysis_time": "2026-01-24T10:05:00Z",
+        "analyst": "automated-system"
+    },
+    "static_analysis": {
+        "entropy": 7.8,
+        "suspicious_strings": [
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+            "EnableLUA"
+        ],
+        "detected_apis": [
+            "NtQuerySystemInformation",
+            "NtOpenProcess"
+        ],
+        "file_features": [
+            "Anti-VM",
+            "Anti-Debug"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [
+            "Attempted to terminate security processes"
+        ],
+        "registry_modifications": [
+            "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System\\EnableLUA"
+        ],
+        "file_operations": [
+            "Modified system hosts file"
+        ],
+        "network_connections": [
+            "91.241.19.12"
+        ]
+    },
+    "signature_detection": {
+        "yara_matches": [
+            "Stealer_CobaltStrike"
+        ],
+        "sigma_matches": [
+            "Security_Service_Tampering"
+        ]
+    },
+    "risk_assessment": {
+        "risk_level": "HIGH",
+        "confidence": 0.98
+    }
+}

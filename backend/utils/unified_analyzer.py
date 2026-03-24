@@ -16,6 +16,11 @@ from .strings_analyzer import extract_strings, analyze_suspicious_strings
 from .capa_analyzer import CapaAnalyzer
 from .die_analyzer import run_die_analysis, get_die_summary
 
+# Import ELF analyzers
+from .elf_analyzer import get_comprehensive_elf_analysis
+from .elf_packer_detector import get_elf_packer_analysis
+from .elf_hardening_analyzer import get_elf_hardening_analysis
+
 
 def analyze_file_with_cvss(file_path, file_type=None):
     """
@@ -58,6 +63,8 @@ def analyze_file_with_cvss(file_path, file_type=None):
         result['analysis'] = analyze_pdf_with_cvss(file_path, content)
     elif file_type == 'PE':
         result['analysis'] = analyze_pe_with_cvss(file_path, content)
+    elif file_type == 'ELF':
+        result['analysis'] = analyze_elf_with_cvss(file_path, content)
     else:
         result['analysis'] = analyze_generic_with_cvss(file_path, content)
     
@@ -159,6 +166,80 @@ def analyze_pe_with_cvss(file_path, content):
         pe_analysis['verdict'] = 'SAFE - No significant threats detected'
     
     return pe_analysis
+
+
+def analyze_elf_with_cvss(file_path, content):
+    """
+    Analyze ELF (Linux executable) file with CVSS scoring
+    
+    Args:
+        file_path (str): Path to ELF file
+        content (bytes): File content
+    
+    Returns:
+        dict: ELF analysis with CVSS scoring
+    """
+    elf_analysis = {}
+    
+    # Basic file info
+    file_info = get_comprehensive_file_info(file_path, content)
+    elf_analysis['file_info'] = file_info
+    
+    # Comprehensive ELF analysis
+    elf_info = get_comprehensive_elf_analysis(file_path)
+    elf_analysis['elf'] = elf_info
+    
+    # Packer/obfuscation detection
+    packer_info = get_elf_packer_analysis(file_path)
+    elf_analysis['packer'] = packer_info
+    
+    # Security hardening analysis
+    hardening_info = get_elf_hardening_analysis(file_path)
+    elf_analysis['hardening'] = hardening_info
+    
+    # CAPA analysis (capa supports ELF too!)
+    try:
+        capa = CapaAnalyzer()
+        capa_results = capa.analyze(file_path)
+        elf_analysis['capa'] = capa_results
+    except Exception as e:
+        elf_analysis['capa'] = {
+            'success': False,
+            'error': str(e)
+        }
+    
+    # String analysis
+    strings_data = extract_strings(content)
+    suspicious_strings = analyze_suspicious_strings(strings_data)
+    elf_analysis['strings'] = {
+        'total_count': len(strings_data),
+        'suspicious': suspicious_strings
+    }
+    
+    # Calculate CVSS score for ELF
+    cvss_result = CVSSCalculator.calculate_elf_score(elf_analysis)
+    
+    # Add CVSS results
+    elf_analysis['cvss_score'] = cvss_result['cvss_score']
+    elf_analysis['severity'] = cvss_result['severity']
+    elf_analysis['threat_level'] = cvss_result['threat_level']
+    elf_analysis['contributing_factors'] = cvss_result['contributing_factors']
+    elf_analysis['recommendation'] = CVSSCalculator.get_recommendation(cvss_result)
+    
+    # Determine verdict based on CVSS severity
+    severity = cvss_result['severity']
+    if severity == 'Critical':
+        elf_analysis['verdict'] = 'MALICIOUS - High confidence'
+    elif severity == 'High':
+        elf_analysis['verdict'] = 'DANGEROUS - Further analysis recommended'
+    elif severity == 'Medium':
+        elf_analysis['verdict'] = 'SUSPICIOUS - Manual review suggested'
+    elif severity == 'Low':
+        elf_analysis['verdict'] = 'QUESTIONABLE - Proceed with caution'
+    else:
+        elf_analysis['verdict'] = 'SAFE - No significant threats detected'
+    
+    return elf_analysis
 
 
 def analyze_generic_with_cvss(file_path, content):

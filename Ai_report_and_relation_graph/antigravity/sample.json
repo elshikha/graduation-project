@@ -1,0 +1,26 @@
+{
+    "processes": [
+        {
+            "pid": 100,
+            "ppid": null,
+            "name": "winword.exe",
+            "command_line": "winword.exe invoice.doc",
+            "start_time": "2025-12-08T01:23:00Z"
+        },
+        {
+            "pid": 200,
+            "ppid": 100,
+            "name": "cmd.exe",
+            "command_line": "cmd.exe /c powershell",
+            "start_time": "2025-12-08T01:23:05Z"
+        }
+    ],
+    "file_events": [
+        {
+            "process_pid": 200,
+            "action": "create",
+            "path": "C:\\Users\\Public\\payload.exe",
+            "timestamp": "2025-12-08T01:23:10Z"
+        }
+    ]
+}

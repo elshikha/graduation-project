@@ -1,0 +1,59 @@
+{
+    "metadata": {
+        "sample_id": "INSTALLER-BENIGN-002",
+        "analysis_time": "2026-02-06T17:15:00Z",
+        "analyst": "automated-system"
+    },
+    "file_information": {
+        "filename": "Official_Product_Setup.exe",
+        "file_type": "PE32 executable (GUI) Intel 80386, for MS Windows",
+        "hash_values": {
+            "sha256": "3a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b"
+        }
+    },
+    "static_analysis": {
+        "entropy": 5.42,
+        "file_features": [
+            "DigitallySigned",
+            "StandardEntropy"
+        ]
+    },
+    "capabilities_analysis": {
+        "process_manipulation": [
+            "GetProcessHeap",
+            "ExitProcess"
+        ],
+        "anti_debugging": [
+            "IsDebuggerPresent"
+        ],
+        "persistence": [
+            "RegSetValueEx",
+            "CreateService"
+        ]
+    },
+    "signature_detection": {
+        "yara_matches": [
+            {
+                "rule": "Behavior_Persistence_Mechanism",
+                "label": "persistence",
+                "confidence": "Medium",
+                "matched_indicators": [
+                    "RegSetValueEx",
+                    "CreateService"
+                ]
+            },
+            {
+                "rule": "Behavior_Anti_Analysis",
+                "label": "anti_analysis",
+                "confidence": "High",
+                "matched_indicators": [
+                    "IsDebuggerPresent"
+                ]
+            }
+        ]
+    },
+    "risk_assessment": {
+        "risk_level": "LOW",
+        "confidence": 0.90
+    }
+}

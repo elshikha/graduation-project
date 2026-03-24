@@ -1,0 +1,36 @@
+{
+    "metadata": {
+        "sample_id": "SAMPLE-003",
+        "file_type": "EXE",
+        "analysis_time": "2026-01-24T10:10:00Z",
+        "analyst": "automated-system"
+    },
+    "static_analysis": {
+        "entropy": 6.2,
+        "suspicious_strings": [
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        ],
+        "detected_apis": [
+            "RegSetValue"
+        ],
+        "file_features": [
+            "Packed"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [],
+        "registry_modifications": [
+            "HKLM\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        ],
+        "file_operations": [],
+        "network_connections": []
+    },
+    "signature_detection": {
+        "yara_matches": [],
+        "sigma_matches": []
+    },
+    "risk_assessment": {
+        "risk_level": "MEDIUM",
+        "confidence": 0.68
+    }
+}

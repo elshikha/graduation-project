@@ -33,6 +33,20 @@ from .strings_analyzer import (
     analyze_strings,
     check_urls_with_virustotal
 )
+from .elf_analyzer import (
+    get_comprehensive_elf_analysis,
+    analyze_elf_header,
+    analyze_elf_sections,
+    analyze_elf_segments,
+    analyze_elf_symbols
+)
+from .elf_packer_detector import get_elf_packer_analysis
+from .elf_hardening_analyzer import get_elf_hardening_analysis
+from .office_analyzer import (
+    get_comprehensive_office_analysis,
+    get_office_macro_analysis,
+    get_office_url_analysis
+)
 
 __all__ = [
     'detect_file_type',
@@ -57,5 +71,17 @@ __all__ = [
     'scan_file_hash',
     'VTScanner',
     'analyze_strings',
-    'check_urls_with_virustotal'
+    'check_urls_with_virustotal',
+    # ELF analysis
+    'get_comprehensive_elf_analysis',
+    'analyze_elf_header',
+    'analyze_elf_sections',
+    'analyze_elf_segments',
+    'analyze_elf_symbols',
+    'get_elf_packer_analysis',
+    'get_elf_hardening_analysis',
+    # Office analysis
+    'get_comprehensive_office_analysis',
+    'get_office_macro_analysis',
+    'get_office_url_analysis'
 ]

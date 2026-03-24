@@ -299,6 +299,247 @@ class CVSSCalculator:
         return CVSSCalculator.calculate_cvss_score(threat_indicators)
     
     @staticmethod
+    def calculate_elf_score(elf_analysis):
+        """
+        Calculate CVSS score for ELF (Linux executable) analysis
+        
+        Args:
+            elf_analysis (dict): ELF analysis results
+            
+        Returns:
+            dict: CVSS scoring results
+        """
+        threat_indicators = {}
+        
+        # Packer detection
+        packer_info = elf_analysis.get('packer', {})
+        if packer_info.get('is_packed'):
+            threat_indicators['packer_detected'] = 1
+            threat_indicators['obfuscation'] = len(packer_info.get('indicators', []))
+        
+        # Hardening analysis - missing hardening increases risk
+        hardening = elf_analysis.get('hardening', {})
+        
+        # No RELRO is a vulnerability indicator (not a threat, but reduces security)
+        if hardening.get('relro', {}).get('level') == 'None':
+            threat_indicators['anomalous_structure'] = threat_indicators.get('anomalous_structure', 0) + 1
+        
+        # No PIE (fixed address, easier to exploit)
+        if not hardening.get('pie', {}).get('enabled', True):
+            threat_indicators['anomalous_structure'] = threat_indicators.get('anomalous_structure', 0) + 1
+        
+        # NX disabled (executable stack - dangerous)
+        if not hardening.get('nx', {}).get('enabled', True):
+            threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+        
+        # No stack canary
+        if not hardening.get('stack_canary', {}).get('enabled', True):
+            threat_indicators['anomalous_structure'] = threat_indicators.get('anomalous_structure', 0) + 1
+        
+        # Suspicious imports detection
+        elf_info = elf_analysis.get('elf', {})
+        suspicious_imports = elf_info.get('suspicious_imports', [])
+        
+        for imp in suspicious_imports:
+            # High-risk imports
+            if imp in ('ptrace', 'mprotect', 'clone', 'fork', 'execve', 'execvp'):
+                threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+            elif imp in ('socket', 'connect', 'send', 'recv', 'sendto', 'recvfrom', 'bind', 'listen'):
+                threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+            elif imp in ('dlopen', 'dlsym'):
+                threat_indicators['process_injection'] = threat_indicators.get('process_injection', 0) + 1
+            elif imp in ('chmod', 'chown', 'unlink', 'remove'):
+                threat_indicators['system_modification'] = threat_indicators.get('system_modification', 0) + 1
+            else:
+                threat_indicators['suspicious_imports'] = threat_indicators.get('suspicious_imports', 0) + 1
+        
+        # RWX segments (code injection risk)
+        segments = elf_info.get('segments', {})
+        if segments.get('has_rwx'):
+            threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+            threat_indicators['process_injection'] = threat_indicators.get('process_injection', 0) + 1
+        
+        # High entropy (encryption/packing)
+        file_entropy = elf_info.get('file_entropy', 0)
+        if file_entropy >= 7.5:
+            threat_indicators['high_entropy'] = 1
+            threat_indicators['encryption'] = 1
+        elif file_entropy >= 7.0:
+            threat_indicators['high_entropy'] = 1
+        
+        # High entropy sections
+        sections = elf_info.get('sections', {})
+        high_entropy_sections = sections.get('high_entropy_sections', [])
+        if high_entropy_sections:
+            threat_indicators['high_entropy'] = threat_indicators.get('high_entropy', 0) + len(high_entropy_sections)
+        
+        # Embedded payloads
+        if elf_info.get('has_embedded_payloads'):
+            threat_indicators['embedded_payload'] = len(elf_info.get('embedded_payloads', []))
+        
+        # URLs (network communication indicator)
+        url_count = elf_info.get('url_count', 0)
+        if url_count >= 5:
+            threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+        
+        # Raw syscalls (anti-analysis / evasion)
+        syscalls = elf_info.get('syscalls', {})
+        if syscalls.get('has_raw_syscalls'):
+            threat_indicators['anti_analysis'] = threat_indicators.get('anti_analysis', 0) + 1
+        
+        # No symbols (stripped - obfuscation indicator)
+        symbols = elf_info.get('symbols', {})
+        if symbols.get('no_symbols'):
+            threat_indicators['obfuscation'] = threat_indicators.get('obfuscation', 0) + 1
+        
+        # CAPA analysis results (if available for ELF)
+        capa_results = elf_analysis.get('capa', {})
+        if capa_results.get('success'):
+            capabilities = capa_results.get('capabilities', [])
+            attack_tactics = capa_results.get('attack_tactics', [])
+            
+            for cap in capabilities:
+                cap_name = cap.get('capability', '').lower()
+                
+                # Code execution indicators
+                if any(x in cap_name for x in ['execute', 'inject', 'shellcode']):
+                    threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+                
+                # Network communication
+                if any(x in cap_name for x in ['socket', 'http', 'download', 'network']):
+                    threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+                
+                # Anti-analysis
+                if any(x in cap_name for x in ['anti', 'debug', 'sandbox', 'vm detect']):
+                    threat_indicators['anti_analysis'] = threat_indicators.get('anti_analysis', 0) + 1
+            
+            # ATT&CK tactics
+            if len(attack_tactics) >= 3:
+                threat_indicators['remote_exploit'] = 1
+        
+        return CVSSCalculator.calculate_cvss_score(threat_indicators)
+    
+    @staticmethod
+    def calculate_office_score(office_analysis):
+        """
+        Calculate CVSS score for Office document analysis
+        
+        Args:
+            office_analysis (dict): Office analysis results containing macro, url, and structure analysis
+            
+        Returns:
+            dict: CVSS scoring results
+        """
+        threat_indicators = {}
+        
+        # Macro analysis results
+        macro_analysis = office_analysis.get('macros', {})
+        
+        # VBA macros detected
+        if macro_analysis.get('has_vba_macros'):
+            threat_indicators['embedded_content'] = threat_indicators.get('embedded_content', 0) + 1
+        
+        # XLM macros (legacy, often malicious)
+        if macro_analysis.get('has_xlm_macros'):
+            threat_indicators['embedded_content'] = threat_indicators.get('embedded_content', 0) + 2
+            threat_indicators['obfuscation'] = threat_indicators.get('obfuscation', 0) + 1
+        
+        # Auto-execution triggers
+        auto_exec = macro_analysis.get('auto_exec_triggers', [])
+        if auto_exec:
+            threat_indicators['auto_execution'] = len(auto_exec)
+            threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+        
+        # Suspicious functions in macros
+        suspicious_functions = macro_analysis.get('suspicious_functions', [])
+        for func in suspicious_functions:
+            func_name = func.get('function', '').lower() if isinstance(func, dict) else str(func).lower()
+            
+            if 'shell' in func_name or 'powershell' in func_name:
+                threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+            elif 'download' in func_name or 'http' in func_name or 'url' in func_name:
+                threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+            elif 'exec' in func_name or 'run' in func_name:
+                threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+            elif 'registry' in func_name or 'reg' in func_name:
+                threat_indicators['system_modification'] = threat_indicators.get('system_modification', 0) + 1
+            else:
+                threat_indicators['suspicious_strings'] = threat_indicators.get('suspicious_strings', 0) + 1
+        
+        # Obfuscation patterns
+        obfuscation = macro_analysis.get('obfuscation_patterns', [])
+        if obfuscation:
+            threat_indicators['obfuscation'] = threat_indicators.get('obfuscation', 0) + len(obfuscation)
+        
+        # IOCs detected
+        iocs = macro_analysis.get('iocs', [])
+        if iocs:
+            threat_indicators['suspicious_strings'] = threat_indicators.get('suspicious_strings', 0) + len(iocs)
+        
+        # URL analysis results
+        url_analysis = office_analysis.get('urls', {})
+        
+        # Suspicious URLs
+        suspicious_urls = url_analysis.get('suspicious_urls', 0)
+        if suspicious_urls > 0:
+            threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+            threat_indicators['suspicious_strings'] = threat_indicators.get('suspicious_strings', 0) + suspicious_urls
+        
+        # External templates (template injection attack)
+        templates = url_analysis.get('templates', [])
+        if templates:
+            threat_indicators['remote_exploit'] = threat_indicators.get('remote_exploit', 0) + 1
+            threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+        
+        # OLE objects
+        ole_objects = url_analysis.get('ole_objects', [])
+        if ole_objects:
+            threat_indicators['embedded_content'] = threat_indicators.get('embedded_content', 0) + len(ole_objects)
+        
+        # UNC paths (SMB attacks)
+        unc_paths = url_analysis.get('unc_paths', [])
+        if unc_paths:
+            threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+            threat_indicators['data_exfiltration'] = threat_indicators.get('data_exfiltration', 0) + 1
+        
+        # URL threat scores
+        urls = url_analysis.get('urls', [])
+        for url_info in urls:
+            if isinstance(url_info, dict):
+                threats = url_info.get('threats', [])
+                if 'Executable Extension' in threats:
+                    threat_indicators['code_execution'] = threat_indicators.get('code_execution', 0) + 1
+                if 'Direct IP Address' in threats or 'UNC Path' in threats:
+                    threat_indicators['network_communication'] = threat_indicators.get('network_communication', 0) + 1
+        
+        # Structure analysis results
+        structure = office_analysis.get('structure', {})
+        
+        # High entropy (encryption/compression)
+        overall_entropy = structure.get('overall_entropy', 0)
+        if overall_entropy >= 7.5:
+            threat_indicators['high_entropy'] = 1
+            threat_indicators['encryption'] = 1
+        elif overall_entropy >= 7.0:
+            threat_indicators['high_entropy'] = 1
+        
+        # Encrypted document
+        if structure.get('is_encrypted'):
+            threat_indicators['encryption'] = threat_indicators.get('encryption', 0) + 1
+        
+        # Suspicious OLE streams
+        ole_streams = structure.get('ole_streams', [])
+        for stream in ole_streams:
+            if isinstance(stream, dict):
+                stream_name = stream.get('name', '').lower()
+                if 'macro' in stream_name or 'vba' in stream_name:
+                    threat_indicators['embedded_content'] = threat_indicators.get('embedded_content', 0) + 1
+                elif 'object' in stream_name or 'ole' in stream_name:
+                    threat_indicators['embedded_content'] = threat_indicators.get('embedded_content', 0) + 1
+        
+        return CVSSCalculator.calculate_cvss_score(threat_indicators)
+    
+    @staticmethod
     def get_recommendation(cvss_result):
         """
         Get security recommendation based on CVSS score

@@ -1,0 +1,32 @@
+{
+    "metadata": {
+        "sample_id": "SAMPLE-004",
+        "file_type": "DOCX",
+        "analysis_time": "2026-01-24T10:15:00Z",
+        "analyst": "automated-system"
+    },
+    "static_analysis": {
+        "entropy": 4.5,
+        "suspicious_strings": [],
+        "detected_apis": [],
+        "file_features": [
+            "MacrosDisabled"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [],
+        "registry_modifications": [],
+        "file_operations": [
+            "Temporary file creation"
+        ],
+        "network_connections": []
+    },
+    "signature_detection": {
+        "yara_matches": [],
+        "sigma_matches": []
+    },
+    "risk_assessment": {
+        "risk_level": "LOW",
+        "confidence": 0.85
+    }
+}

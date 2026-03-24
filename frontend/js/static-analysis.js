@@ -275,9 +275,9 @@ function showResultsFromServer(file, data) {
         document.getElementById('peAnalysisCard').style.display = 'none';
     }
     
-    // Show CAPA capability analysis for PE files
+    // Show CAPA capability analysis for PE and ELF files
     console.log('CAPA analysis data:', data.capa_analysis);
-    if (data.file_type === 'PE' && data.capa_analysis) {
+    if ((data.file_type === 'PE' || data.file_type === 'ELF') && data.capa_analysis) {
         const capaCard = document.getElementById('capaAnalysisCard');
         const capaInfo = document.getElementById('capaInfo');
         
@@ -305,6 +305,102 @@ function showResultsFromServer(file, data) {
         }
     } else {
         document.getElementById('peStructureCard').style.display = 'none';
+    }
+    
+    // Show ELF analysis for ELF files
+    console.log('ELF analysis data:', data.elf_analysis);
+    if (data.file_type === 'ELF' && data.elf_analysis) {
+        const elfCard = document.getElementById('elfAnalysisCard');
+        const elfInfo = document.getElementById('elfInfo');
+        
+        if (!data.elf_analysis.error) {
+            elfCard.style.display = 'block';
+            elfInfo.innerHTML = generateELFAnalysisHTML(data.elf_analysis);
+        } else {
+            console.error('ELF analysis error:', data.elf_analysis.error);
+        }
+    } else {
+        document.getElementById('elfAnalysisCard').style.display = 'none';
+    }
+    
+    // Show ELF hardening analysis for ELF files
+    console.log('ELF hardening data:', data.elf_hardening);
+    if (data.file_type === 'ELF' && data.elf_hardening) {
+        const hardeningCard = document.getElementById('elfHardeningCard');
+        const hardeningInfo = document.getElementById('elfHardeningInfo');
+        
+        if (!data.elf_hardening.error) {
+            hardeningCard.style.display = 'block';
+            hardeningInfo.innerHTML = generateELFHardeningHTML(data.elf_hardening);
+        } else {
+            console.error('ELF hardening error:', data.elf_hardening.error);
+        }
+    } else {
+        document.getElementById('elfHardeningCard').style.display = 'none';
+    }
+    
+    // Show ELF packer analysis for ELF files
+    console.log('ELF packer data:', data.elf_packer);
+    if (data.file_type === 'ELF' && data.elf_packer) {
+        const packerCard = document.getElementById('elfPackerCard');
+        const packerInfo = document.getElementById('elfPackerInfo');
+        
+        if (!data.elf_packer.error) {
+            packerCard.style.display = 'block';
+            packerInfo.innerHTML = generateELFPackerHTML(data.elf_packer);
+        } else {
+            console.error('ELF packer error:', data.elf_packer.error);
+        }
+    } else {
+        document.getElementById('elfPackerCard').style.display = 'none';
+    }
+    
+    // Show Office analysis for Office files
+    console.log('Office analysis data:', data.office_analysis);
+    if (data.file_type === 'Office' && data.office_analysis) {
+        const officeCard = document.getElementById('officeAnalysisCard');
+        const officeInfo = document.getElementById('officeInfo');
+        
+        if (!data.office_analysis.error) {
+            officeCard.style.display = 'block';
+            officeInfo.innerHTML = generateOfficeAnalysisHTML(data.office_analysis);
+        } else {
+            console.error('Office analysis error:', data.office_analysis.error);
+        }
+    } else {
+        document.getElementById('officeAnalysisCard').style.display = 'none';
+    }
+    
+    // Show Office macro analysis for Office files
+    console.log('Office macro data:', data.office_macros);
+    if (data.file_type === 'Office' && data.office_macros) {
+        const macroCard = document.getElementById('officeMacroCard');
+        const macroInfo = document.getElementById('officeMacroInfo');
+        
+        if (!data.office_macros.error) {
+            macroCard.style.display = 'block';
+            macroInfo.innerHTML = generateOfficeMacroHTML(data.office_macros);
+        } else {
+            console.error('Office macro error:', data.office_macros.error);
+        }
+    } else {
+        document.getElementById('officeMacroCard').style.display = 'none';
+    }
+    
+    // Show Office URL analysis for Office files
+    console.log('Office URL data:', data.office_urls);
+    if (data.file_type === 'Office' && data.office_urls) {
+        const urlCard = document.getElementById('officeUrlCard');
+        const urlInfo = document.getElementById('officeUrlInfo');
+        
+        if (!data.office_urls.error) {
+            urlCard.style.display = 'block';
+            urlInfo.innerHTML = generateOfficeUrlHTML(data.office_urls);
+        } else {
+            console.error('Office URL error:', data.office_urls.error);
+        }
+    } else {
+        document.getElementById('officeUrlCard').style.display = 'none';
     }
     
     // Show PDF analysis for PDF files
@@ -546,6 +642,452 @@ function generatePEAnalysisHTML(pe) {
     return html;
 }
 
+// Office Document Analysis Functions - Matching office.py structure
+function generateOfficeAnalysisHTML(office) {
+    let html = '';
+    
+    // Get info from the new structure
+    const info = office.info || {};
+    const metadata = office.metadata || {};
+    const score = office.score || 0;
+    const verdict = office.verdict || 'SAFE';
+    const reasons = office.reasons || [];
+    
+    // Verdict Banner (matching office.py output style)
+    let bannerColor = '#4caf50'; // green
+    if (verdict === 'MALICIOUS') bannerColor = '#f44336';
+    else if (verdict === 'SUSPICIOUS') bannerColor = '#ff9800';
+    
+    html += '<div class="office-verdict-banner" style="background: linear-gradient(135deg, ' + bannerColor + '15, ' + bannerColor + '25); border-left: 4px solid ' + bannerColor + '; padding: 1.5rem; border-radius: 12px; margin-bottom: 1.5rem;">';
+    html += '<div style="display: flex; justify-content: space-between; align-items: center;">';
+    html += '<div>';
+    html += '<h3 style="margin: 0; color: ' + bannerColor + ';"><i class="fas ' + (verdict === 'SAFE' ? 'fa-check-circle' : 'fa-exclamation-triangle') + '"></i> ' + verdict + '</h3>';
+    html += '<p style="margin: 0.5rem 0 0 0; color: #666;">Risk Score: ' + score + '/10</p>';
+    html += '</div>';
+    html += '<div style="text-align: center;">';
+    html += '<div style="font-size: 2.5rem; font-weight: 700; color: ' + bannerColor + ';">' + score + '</div>';
+    html += '<div style="font-size: 0.85rem; color: #666;">SCORE</div>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+    
+    // File Identity (TrID Engine style)
+    html += '<div class="office-section">';
+    html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-fingerprint"></i> File Identity (TrID Engine)</h4>';
+    html += '<div class="office-grid">';
+    
+    html += '<div class="office-item"><span class="office-label">Filename</span><span class="office-value">' + escapeHtml(info.filename || 'N/A') + '</span></div>';
+    html += '<div class="office-item"><span class="office-label">Type</span><span class="office-value">' + escapeHtml(info.trid_type || 'Unknown') + '</span></div>';
+    html += '<div class="office-item"><span class="office-label">Magic Bytes</span><span class="office-value" style="font-family: monospace;">' + escapeHtml(info.magic || 'N/A') + '</span></div>';
+    html += '<div class="office-item"><span class="office-label">Size</span><span class="office-value">' + (info.size ? info.size.toLocaleString() + ' bytes' : 'N/A') + '</span></div>';
+    
+    html += '</div></div>';
+    
+    // Entropy
+    const entropy = info.entropy || 0;
+    let entropyClass = 'entropy-low';
+    let entropyStatus = 'Normal';
+    if (entropy >= 7.5) { entropyClass = 'entropy-high'; entropyStatus = 'High (Possibly encrypted/packed)'; }
+    else if (entropy >= 6.5) { entropyClass = 'entropy-medium'; entropyStatus = 'Medium'; }
+    
+    html += '<div class="office-section">';
+    html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-chart-area"></i> Entropy Analysis</h4>';
+    html += '<div class="entropy-bar-container">';
+    html += '<div class="entropy-bar ' + entropyClass + '" style="width: ' + (entropy * 12.5) + '%;"></div>';
+    html += '</div>';
+    html += '<p style="font-weight: 600;" class="' + entropyClass + '">' + entropy.toFixed(2) + ' / 8.0 - ' + entropyStatus + '</p>';
+    html += '</div>';
+    
+    // Metadata & File Intelligence
+    html += '<div class="office-section">';
+    html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-info-circle"></i> Metadata & File Intelligence</h4>';
+    html += '<div class="office-grid">';
+    
+    const metaFields = [
+        {key: 'author', label: 'Author'},
+        {key: 'last_modified_by', label: 'Last Modified By'},
+        {key: 'created', label: 'Created Date'},
+        {key: 'modified', label: 'Modified Date'},
+        {key: 'title', label: 'Title'},
+        {key: 'subject', label: 'Subject'},
+        {key: 'company', label: 'Company'},
+        {key: 'application', label: 'Application'}
+    ];
+    
+    metaFields.forEach(field => {
+        const value = metadata[field.key];
+        if (value && value !== 'N/A') {
+            html += '<div class="office-item">';
+            html += '<span class="office-label">' + field.label + '</span>';
+            html += '<span class="office-value">' + escapeHtml(value) + '</span>';
+            html += '</div>';
+        }
+    });
+    
+    html += '</div></div>';
+    
+    // Hashes
+    const hashes = info.hashes || {};
+    if (hashes.md5 && hashes.md5 !== 'Error') {
+        html += '<div class="office-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-key"></i> Cryptographic Hashes</h4>';
+        html += '<div class="hash-list">';
+        
+        ['md5', 'sha1', 'sha256', 'sha512'].forEach(hashType => {
+            if (hashes[hashType] && hashes[hashType] !== 'Error') {
+                html += '<div class="hash-item">';
+                html += '<span class="hash-label">' + hashType.toUpperCase() + '</span>';
+                html += '<code class="hash-value">' + escapeHtml(hashes[hashType]) + '</code>';
+                html += '</div>';
+            }
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // OLE Sector Map (Olemap)
+    const oleMap = office.ole_map || {};
+    if (oleMap.sector_size && oleMap.sector_size > 0) {
+        html += '<div class="office-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-database"></i> Sector Map (Olemap)</h4>';
+        html += '<div class="office-grid">';
+        html += '<div class="office-item"><span class="office-label">Sector Size</span><span class="office-value">' + oleMap.sector_size + ' bytes</span></div>';
+        html += '<div class="office-item"><span class="office-label">Total Sectors</span><span class="office-value">' + oleMap.total_sectors + '</span></div>';
+        html += '<div class="office-item"><span class="office-label">Slack Space</span><span class="office-value">' + oleMap.slack_space + ' bytes</span></div>';
+        html += '</div></div>';
+    }
+    
+    // OLE Stream Timestamps (Oletime)
+    const streams = office.streams || [];
+    if (streams.length > 0) {
+        html += '<div class="office-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-clock"></i> Stream Timestamps (Oletime)</h4>';
+        html += '<table class="office-table" style="width: 100%; border-collapse: collapse;">';
+        html += '<thead><tr style="background: #f0f0f0;"><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Stream</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Timestamp</th></tr></thead>';
+        html += '<tbody>';
+        
+        streams.slice(0, 10).forEach(stream => {
+            html += '<tr style="border-bottom: 1px solid #eee;">';
+            html += '<td style="padding: 0.5rem; font-family: monospace; font-size: 0.85rem;">' + escapeHtml(stream.name || '') + '</td>';
+            html += '<td style="padding: 0.5rem; color: #666;">' + escapeHtml(stream.time || '') + '</td>';
+            html += '</tr>';
+        });
+        
+        if (streams.length > 10) {
+            html += '<tr><td colspan="2" style="padding: 0.5rem; color: #999; text-align: center;">... and ' + (streams.length - 10) + ' more streams</td></tr>';
+        }
+        
+        html += '</tbody></table></div>';
+    }
+    
+    // Detected Threats (Reasons)
+    if (reasons.length > 0) {
+        html += '<div class="office-section" style="background: #fff8f8; border-color: #ffcdd2;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #c62828;"><i class="fas fa-exclamation-triangle"></i> Detected Threats</h4>';
+        html += '<ul class="risk-indicator-list">';
+        
+        reasons.forEach(reason => {
+            html += '<li class="risk-indicator"><i class="fas fa-exclamation-circle"></i> ' + escapeHtml(reason) + '</li>';
+        });
+        
+        html += '</ul></div>';
+    }
+    
+    // Forensic Artifacts
+    const artifacts = office.artifacts || [];
+    if (artifacts.length > 0) {
+        html += '<div class="office-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-search"></i> Forensic Artifacts & Hex Dumps</h4>';
+        html += '<table class="office-table" style="width: 100%; border-collapse: collapse;">';
+        html += '<thead><tr style="background: #f0f0f0;"><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd; width: 150px;">Type</th><th style="padding: 0.75rem; text-align: left; border-bottom: 2px solid #ddd;">Value</th></tr></thead>';
+        html += '<tbody>';
+        
+        artifacts.forEach(artifact => {
+            let valueStr = artifact.value || '';
+            if (valueStr.length > 80) valueStr = valueStr.substring(0, 77) + '...';
+            html += '<tr style="border-bottom: 1px solid #eee;">';
+            html += '<td style="padding: 0.5rem; font-weight: 600; color: #333;">' + escapeHtml(artifact.type || 'Unknown') + '</td>';
+            html += '<td style="padding: 0.5rem; font-family: monospace; font-size: 0.85rem; word-break: break-all;">' + escapeHtml(valueStr) + '</td>';
+            html += '</tr>';
+        });
+        
+        html += '</tbody></table></div>';
+    }
+    
+    // VMonkey Heuristics (Obfuscation)
+    const vmonkey = office.vmonkey_heuristics || [];
+    if (vmonkey.length > 0) {
+        html += '<div class="office-section" style="background: #f3e5f5; border-color: #ce93d8;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #7b1fa2;"><i class="fas fa-mask"></i> Heuristic Emulation (VMonkey-Style)</h4>';
+        html += '<div class="obfuscation-list">';
+        
+        vmonkey.forEach(h => {
+            html += '<div class="obfuscation-item">';
+            html += '<span class="pattern-name">' + escapeHtml(h.pattern || h) + '</span>';
+            if (h.count) {
+                html += '<span class="pattern-count">Found ' + h.count + ' times</span>';
+            }
+            html += '</div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    return html;
+}
+
+function generateOfficeMacroHTML(macros) {
+    let html = '';
+    
+    // Handle both old and new structure
+    const hasMacros = macros.has_vba_macros || macros.has_xlm_macros;
+    const macroCount = macros.macro_count || 0;
+    const autoExec = macros.auto_exec_triggers || [];
+    const suspicious = macros.suspicious_keywords || macros.suspicious_functions || [];
+    const vmonkey = macros.vmonkey_heuristics || macros.obfuscation_patterns || [];
+    const iocs = macros.iocs || [];
+    const snippets = macros.macro_snippets || [];
+    
+    // Calculate status
+    let macroStatus = 'CLEAN';
+    let statusColor = 'green';
+    if (autoExec.length > 0 || vmonkey.length > 0) {
+        macroStatus = 'DANGEROUS';
+        statusColor = 'red';
+    } else if (hasMacros) {
+        macroStatus = 'PRESENT';
+        statusColor = 'yellow';
+    }
+    
+    // Status banner
+    html += '<div class="macro-status-banner status-' + statusColor + '">';
+    html += '<div class="macro-status-left">';
+    html += '<i class="fas ' + (hasMacros ? 'fa-exclamation-triangle' : 'fa-check-circle') + '"></i>';
+    html += '<span class="macro-status-text">' + macroStatus + '</span>';
+    html += '</div>';
+    html += '<div class="macro-risk-score">';
+    html += '<span class="score-value">' + macroCount + '</span>';
+    html += '<span class="score-label">Macros Found</span>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Macro presence grid
+    html += '<div class="macro-section">';
+    html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-code"></i> Macro Detection</h4>';
+    html += '<div class="macro-grid">';
+    
+    html += '<div class="macro-item"><span class="macro-label">VBA Macros</span>';
+    html += '<span class="macro-value ' + (macros.has_vba_macros ? 'status-danger' : 'status-safe') + '">';
+    html += macros.has_vba_macros ? 'DETECTED' : 'Not Found';
+    html += '</span></div>';
+    
+    html += '<div class="macro-item"><span class="macro-label">XLM Macros (Legacy)</span>';
+    html += '<span class="macro-value ' + (macros.has_xlm_macros ? 'status-danger' : 'status-safe') + '">';
+    html += macros.has_xlm_macros ? 'DETECTED' : 'Not Found';
+    html += '</span></div>';
+    
+    html += '<div class="macro-item"><span class="macro-label">Macro Count</span>';
+    html += '<span class="macro-value">' + macroCount + '</span></div>';
+    
+    html += '</div></div>';
+    
+    // Auto-execution triggers
+    if (autoExec.length > 0) {
+        html += '<div class="macro-section" style="background: #ffebee; border-color: #ef9a9a;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #c62828;"><i class="fas fa-play-circle"></i> Auto-Execution Triggers</h4>';
+        html += '<div class="trigger-list">';
+        
+        autoExec.forEach(trigger => {
+            html += '<div class="trigger-item danger"><code>' + escapeHtml(trigger) + '</code></div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // Suspicious keywords/functions
+    if (suspicious.length > 0) {
+        html += '<div class="macro-section" style="background: #fff3e0; border-color: #ffcc80;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #e65100;"><i class="fas fa-exclamation-triangle"></i> Suspicious Keywords</h4>';
+        html += '<div class="suspicious-list">';
+        
+        suspicious.forEach(kw => {
+            html += '<div class="suspicious-item high"><code>' + escapeHtml(kw) + '</code></div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // VMonkey heuristics
+    if (vmonkey.length > 0) {
+        html += '<div class="macro-section" style="background: #f3e5f5; border-color: #ce93d8;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #7b1fa2;"><i class="fas fa-mask"></i> Obfuscation Patterns</h4>';
+        html += '<div class="obfuscation-list">';
+        
+        vmonkey.forEach(pattern => {
+            const patternName = pattern.pattern || pattern;
+            const count = pattern.count || 0;
+            html += '<div class="obfuscation-item">';
+            html += '<span class="pattern-name">' + escapeHtml(patternName) + '</span>';
+            if (count > 0) html += '<span class="pattern-count">Count: ' + count + '</span>';
+            html += '</div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // IOCs (bad links in macros)
+    if (iocs.length > 0) {
+        html += '<div class="macro-section" style="background: #ffebee; border-color: #ef9a9a;">';
+        html += '<h4 style="margin-bottom: 1rem; color: #c62828;"><i class="fas fa-link"></i> IOCs Found in Macros</h4>';
+        html += '<div class="suspicious-url-list">';
+        
+        iocs.forEach(ioc => {
+            html += '<div class="suspicious-url-item">';
+            html += '<code class="url-text">' + escapeHtml(ioc.value || ioc) + '</code>';
+            if (ioc.verdict) {
+                html += '<span class="threat-tag">' + escapeHtml(ioc.verdict) + '</span>';
+            }
+            html += '</div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // Macro snippets (hex dumps)
+    if (snippets.length > 0) {
+        html += '<div class="macro-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-file-code"></i> Macro Code Snippets</h4>';
+        
+        snippets.forEach(snippet => {
+            html += '<div style="background: #f8f9fa; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">';
+            html += '<div style="font-weight: 600; margin-bottom: 0.5rem;">' + escapeHtml(snippet.filename || 'Unknown') + ' (' + (snippet.length || 0) + ' bytes)</div>';
+            html += '<pre style="background: #1a1a1a; color: #4caf50; padding: 0.75rem; border-radius: 4px; overflow-x: auto; font-size: 0.8rem; margin: 0;">' + escapeHtml(snippet.hex_dump || '') + '</pre>';
+            html += '</div>';
+        });
+        
+        html += '</div>';
+    }
+    
+    return html;
+}
+
+function generateOfficeUrlHTML(urls) {
+    let html = '';
+    
+    // Handle both old and new structure
+    const urlList = urls.urls || urls.extracted_urls || [];
+    const totalUrls = urls.total_urls || urlList.length;
+    const maliciousCount = urls.malicious_count || urls.malicious_urls || urlList.filter(u => u.status === 'MALICIOUS').length;
+    const suspiciousCount = urls.suspicious_count || urls.suspicious_urls || urlList.filter(u => u.status === 'SUSPICIOUS').length;
+    
+    // Determine status
+    let urlStatus = 'CLEAN';
+    let statusColor = 'green';
+    if (maliciousCount > 0) {
+        urlStatus = 'MALICIOUS LINKS';
+        statusColor = 'red';
+    } else if (suspiciousCount > 0) {
+        urlStatus = 'SUSPICIOUS';
+        statusColor = 'orange';
+    } else if (totalUrls > 0) {
+        urlStatus = 'PRESENT';
+        statusColor = 'yellow';
+    }
+    
+    // Status banner
+    html += '<div class="url-status-banner status-' + statusColor + '">';
+    html += '<div class="url-status-left">';
+    html += '<i class="fas ' + (maliciousCount > 0 ? 'fa-exclamation-triangle' : suspiciousCount > 0 ? 'fa-exclamation-circle' : 'fa-check-circle') + '"></i>';
+    html += '<span class="url-status-text">' + urlStatus + '</span>';
+    html += '</div>';
+    html += '<div class="url-risk-score">';
+    html += '<span class="score-value">' + totalUrls + '</span>';
+    html += '<span class="score-label">URLs Found</span>';
+    html += '</div>';
+    html += '</div>';
+    
+    // Summary statistics
+    html += '<div class="url-section">';
+    html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-chart-bar"></i> URL Statistics</h4>';
+    html += '<div class="url-stats">';
+    
+    html += '<div class="stat-item"><span class="stat-value">' + totalUrls + '</span><span class="stat-label">Total URLs</span></div>';
+    html += '<div class="stat-item ' + (maliciousCount > 0 ? 'danger' : '') + '"><span class="stat-value">' + maliciousCount + '</span><span class="stat-label">Malicious</span></div>';
+    html += '<div class="stat-item ' + (suspiciousCount > 0 ? 'danger' : '') + '"><span class="stat-value">' + suspiciousCount + '</span><span class="stat-label">Suspicious</span></div>';
+    
+    html += '</div></div>';
+    
+    // Group URLs by status
+    const maliciousUrls = urlList.filter(u => u.status === 'MALICIOUS');
+    const suspiciousUrls = urlList.filter(u => u.status === 'SUSPICIOUS');
+    const safeUrls = urlList.filter(u => u.status === 'SAFE');
+    
+    // Malicious URLs
+    if (maliciousUrls.length > 0) {
+        html += '<div class="url-section danger-section">';
+        html += '<h4 style="margin-bottom: 1rem; color: #c62828;"><i class="fas fa-skull-crossbones"></i> Malicious Links</h4>';
+        html += '<div class="suspicious-url-list">';
+        
+        maliciousUrls.forEach(urlInfo => {
+            html += '<div class="suspicious-url-item">';
+            html += '<code class="url-text">' + escapeHtml(urlInfo.url) + '</code>';
+            html += '<div class="threat-tags">';
+            html += '<span class="threat-tag">MALICIOUS</span>';
+            if (urlInfo.source) html += '<span class="threat-tag" style="background: #666;">' + escapeHtml(urlInfo.source) + '</span>';
+            html += '</div></div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // Suspicious URLs
+    if (suspiciousUrls.length > 0) {
+        html += '<div class="url-section warning-section">';
+        html += '<h4 style="margin-bottom: 1rem; color: #e65100;"><i class="fas fa-exclamation-triangle"></i> Suspicious Links</h4>';
+        html += '<div class="suspicious-url-list">';
+        
+        suspiciousUrls.forEach(urlInfo => {
+            html += '<div class="suspicious-url-item" style="background: #fff3e0; border-color: #ffcc80;">';
+            html += '<code class="url-text" style="color: #e65100;">' + escapeHtml(urlInfo.url) + '</code>';
+            html += '<div class="threat-tags">';
+            html += '<span class="threat-tag" style="background: #ff9800;">SUSPICIOUS</span>';
+            if (urlInfo.source) html += '<span class="threat-tag" style="background: #666;">' + escapeHtml(urlInfo.source) + '</span>';
+            html += '</div></div>';
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // Safe URLs (collapsed by default)
+    if (safeUrls.length > 0) {
+        html += '<div class="url-section">';
+        html += '<h4 style="margin-bottom: 1rem;"><i class="fas fa-link"></i> Other Links (' + safeUrls.length + ')</h4>';
+        html += '<div class="hyperlink-list">';
+        
+        safeUrls.slice(0, 15).forEach(urlInfo => {
+            html += '<div class="hyperlink-item">';
+            html += '<code>' + escapeHtml(urlInfo.url) + '</code>';
+            if (urlInfo.source) html += '<span style="font-size: 0.75rem; color: #999; margin-left: 1rem;">' + escapeHtml(urlInfo.source) + '</span>';
+            html += '</div>';
+        });
+        
+        if (safeUrls.length > 15) {
+            html += '<div class="more-indicator">... and ' + (safeUrls.length - 15) + ' more links</div>';
+        }
+        
+        html += '</div></div>';
+    }
+    
+    if (totalUrls === 0) {
+        html += '<div class="url-section" style="text-align: center; padding: 2rem;">';
+        html += '<i class="fas fa-check-circle" style="font-size: 3rem; color: #4caf50; margin-bottom: 1rem;"></i>';
+        html += '<p style="color: #666; margin: 0;">No external links found in this document.</p>';
+        html += '</div>';
+    }
+    
+    return html;
+}
+
 function generatePDFAnalysisHTML(pdf) {
     let html = '';
     
@@ -753,6 +1295,451 @@ function generatePDFAnalysisHTML(pdf) {
         }
         
         html += '</div>';
+    }
+    
+    return html;
+}
+
+// Generate ELF Analysis HTML
+function generateELFAnalysisHTML(elf) {
+    let html = '';
+    
+    // Header information
+    const header = elf.header || {};
+    html += `
+        <div class="elf-section">
+            <h4><i class="fab fa-linux"></i> ELF Header</h4>
+            <div class="elf-header-grid">
+                <div class="elf-header-item">
+                    <span class="label">Magic:</span>
+                    <span class="value mono">${header.magic || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Class:</span>
+                    <span class="value">${header.class || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Data:</span>
+                    <span class="value">${header.data || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Type:</span>
+                    <span class="value">${header.type || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Machine:</span>
+                    <span class="value">${header.machine || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Entry Point:</span>
+                    <span class="value mono">${header.entry_point || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">OS/ABI:</span>
+                    <span class="value">${header.os_abi || 'N/A'}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Program Headers:</span>
+                    <span class="value">${header.program_header_count || 0}</span>
+                </div>
+                <div class="elf-header-item">
+                    <span class="label">Section Headers:</span>
+                    <span class="value">${header.section_header_count || 0}</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // File entropy
+    if (elf.file_entropy !== undefined) {
+        const entropyPct = (elf.file_entropy / 8) * 100;
+        const entropyClass = elf.file_entropy >= 7.5 ? 'high' : (elf.file_entropy >= 6.0 ? 'medium' : 'low');
+        html += `
+            <div class="elf-section">
+                <h4><i class="fas fa-chart-bar"></i> File Entropy</h4>
+                <div class="entropy-display">
+                    <div class="entropy-bar ${entropyClass}">
+                        <div class="entropy-fill" style="width: ${entropyPct}%"></div>
+                    </div>
+                    <span class="entropy-value">${elf.file_entropy.toFixed(4)}/8.0</span>
+                    <span class="entropy-status ${entropyClass}">${elf.entropy_status || ''}</span>
+                </div>
+            </div>
+        `;
+    }
+    
+    // Program Headers (Segments) - ELF Structure Analysis matching FullElf.py
+    const segments = elf.segments || {};
+    if (segments.segments && segments.segments.length > 0) {
+        html += `
+            <div class="elf-section elf-structure-analysis">
+                <h4><i class="fas fa-list-alt"></i> Program Headers</h4>
+                <div class="elf-table-wrapper">
+                    <table class="elf-table elf-program-headers">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Offset</th>
+                                <th>VirtAddr</th>
+                                <th>FileSz</th>
+                                <th>MemSz</th>
+                                <th>Flags</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        segments.segments.forEach(seg => {
+            // Determine row class based on flags
+            let rowClass = '';
+            const flags = seg.flags || '';
+            if (flags.includes('R') && flags.includes('W') && flags.includes('E')) {
+                rowClass = 'danger-row'; // RWX segment
+            } else if (flags.includes('W') && flags.includes('E')) {
+                rowClass = 'warning-row'; // WX segment
+            }
+            
+            // Format segment type for display (clean up PT_ prefix if needed)
+            let segType = seg.type || '';
+            if (typeof segType === 'string' && segType.startsWith('PT_')) {
+                // Keep as-is, it's already formatted
+            }
+            
+            html += `
+                <tr class="${rowClass}">
+                    <td class="mono">${segType}</td>
+                    <td class="mono">${seg.offset || '0x0'}</td>
+                    <td class="mono" style="font-size: 0.8rem;">${seg.virtual_address || '0x0'}</td>
+                    <td>${seg.file_size !== undefined ? seg.file_size.toLocaleString() : '0'}</td>
+                    <td>${seg.memory_size !== undefined ? seg.memory_size.toLocaleString() : '0'}</td>
+                    <td class="mono ${flags.includes('E') ? 'flag-exec' : ''}">${flags}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        // RWX warning
+        if (segments.has_rwx) {
+            html += `
+                <div class="elf-danger" style="margin-top: 1rem;">
+                    <i class="fas fa-skull-crossbones"></i>
+                    <strong>RWX Segment Detected!</strong>
+                    Read-Write-Execute segments are a major security risk and common in shellcode.
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+    }
+    
+    // Section Headers
+    const sections = elf.sections || {};
+    if (sections.sections && sections.sections.length > 0) {
+        html += `
+            <div class="elf-section elf-structure-analysis">
+                <h4><i class="fas fa-layer-group"></i> Section Headers</h4>
+                <div class="elf-table-wrapper">
+                    <table class="elf-table elf-section-headers">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Type</th>
+                                <th>Address</th>
+                                <th>Offset</th>
+                                <th>Size</th>
+                                <th>Entropy</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+        `;
+        
+        sections.sections.forEach(sec => {
+            const entropyClass = sec.entropy >= 7.0 ? 'danger-row' : (sec.entropy >= 6.0 ? 'warning-row' : '');
+            const entropyHighlight = sec.entropy >= 7.0 ? 'entropy-high' : (sec.entropy >= 6.0 ? 'entropy-medium' : '');
+            html += `
+                <tr class="${entropyClass}">
+                    <td class="mono">${sec.name || '<unnamed>'}</td>
+                    <td>${sec.type || ''}</td>
+                    <td class="mono">${sec.address || '0x0'}</td>
+                    <td class="mono">${sec.offset || '0x0'}</td>
+                    <td>${sec.size !== undefined ? sec.size.toLocaleString() : 0}</td>
+                    <td class="mono ${entropyHighlight}">${sec.entropy ? sec.entropy.toFixed(2) : '0.00'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table></div>';
+        
+        // High entropy sections warning
+        if (sections.high_entropy_sections && sections.high_entropy_sections.length > 0) {
+            html += `
+                <div class="elf-warning" style="margin-top: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>High Entropy Sections:</strong> 
+                    ${sections.high_entropy_sections.map(s => s.name).join(', ')}
+                    (possible packing/encryption)
+                </div>
+            `;
+        }
+        
+        html += '</div>';
+    }
+    
+    // Interpreter
+    if (elf.interpreter) {
+        html += `
+            <div class="elf-info-item">
+                <i class="fas fa-terminal"></i>
+                <strong>Interpreter:</strong> <code>${elf.interpreter}</code>
+            </div>
+        `;
+    }
+    
+    // Suspicious imports
+    if (elf.suspicious_imports && elf.suspicious_imports.length > 0) {
+        html += `
+            <div class="elf-section">
+                <h4><i class="fas fa-exclamation-circle"></i> Suspicious Imports (${elf.suspicious_imports.length})</h4>
+                <div class="suspicious-imports-list">
+                    ${elf.suspicious_imports.map(imp => `<span class="suspicious-import">${imp}</span>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    // Syscalls
+    const syscalls = elf.syscalls || {};
+    if (syscalls.has_raw_syscalls && syscalls.syscalls_detected) {
+        html += `
+            <div class="elf-section">
+                <h4><i class="fas fa-microchip"></i> Raw Syscalls Detected</h4>
+                <ul class="syscall-list">
+                    ${syscalls.syscalls_detected.map(sc => `<li>${sc.description}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // Embedded payloads
+    if (elf.has_embedded_payloads && elf.embedded_payloads && elf.embedded_payloads.length > 0) {
+        html += `
+            <div class="elf-danger">
+                <i class="fas fa-file-archive"></i>
+                <strong>Embedded Payloads Detected:</strong>
+                <ul>
+                    ${elf.embedded_payloads.map(p => `<li>${p.description}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    // URLs
+    if (elf.urls && elf.urls.length > 0) {
+        html += `
+            <div class="elf-section">
+                <h4><i class="fas fa-link"></i> Extracted URLs (${elf.url_count})</h4>
+                <div class="url-list">
+                    ${elf.urls.slice(0, 10).map(url => `<div class="url-item"><code>${url}</code></div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// Generate ELF Hardening Analysis HTML
+function generateELFHardeningHTML(hardening) {
+    let html = '';
+    
+    // Security score banner
+    const score = hardening.security_score || 0;
+    const maxScore = hardening.max_score || 10;
+    const status = hardening.status || 'Unknown';
+    const statusColor = hardening.status_color || 'yellow';
+    
+    const scoreClass = score >= 8 ? 'good' : (score >= 5 ? 'medium' : 'poor');
+    
+    html += `
+        <div class="hardening-score ${scoreClass}">
+            <div class="score-circle">
+                <span class="score-value">${score}</span>
+                <span class="score-max">/${maxScore}</span>
+            </div>
+            <div class="score-label">
+                <strong>${status}</strong>
+                <p>Security Hardening Score</p>
+            </div>
+        </div>
+    `;
+    
+    // Hardening checks
+    const summary = hardening.summary || {};
+    html += '<div class="hardening-checks">';
+    
+    // RELRO
+    const relro = hardening.relro || {};
+    const relroClass = relro.level === 'Full' ? 'enabled' : (relro.level === 'Partial' ? 'partial' : 'disabled');
+    html += `
+        <div class="hardening-item ${relroClass}">
+            <div class="check-icon">
+                <i class="fas ${relro.level === 'Full' ? 'fa-check-circle' : (relro.level === 'Partial' ? 'fa-exclamation-circle' : 'fa-times-circle')}"></i>
+            </div>
+            <div class="check-details">
+                <strong>RELRO</strong>
+                <span class="check-status">${relro.level || 'Unknown'}</span>
+                <p class="check-desc">${relro.description || ''}</p>
+            </div>
+        </div>
+    `;
+    
+    // PIE
+    const pie = hardening.pie || {};
+    const pieClass = pie.enabled ? 'enabled' : 'disabled';
+    html += `
+        <div class="hardening-item ${pieClass}">
+            <div class="check-icon">
+                <i class="fas ${pie.enabled ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            </div>
+            <div class="check-details">
+                <strong>PIE (ASLR)</strong>
+                <span class="check-status">${pie.enabled ? 'Enabled' : 'Disabled'}</span>
+                <p class="check-desc">${pie.description || ''}</p>
+            </div>
+        </div>
+    `;
+    
+    // NX
+    const nx = hardening.nx || {};
+    const nxClass = nx.enabled ? 'enabled' : 'disabled';
+    html += `
+        <div class="hardening-item ${nxClass}">
+            <div class="check-icon">
+                <i class="fas ${nx.enabled ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            </div>
+            <div class="check-details">
+                <strong>NX (Non-Executable Stack)</strong>
+                <span class="check-status">${nx.enabled ? 'Enabled' : 'Disabled'}</span>
+                <p class="check-desc">${nx.description || ''}</p>
+            </div>
+        </div>
+    `;
+    
+    // Stack Canary
+    const canary = hardening.stack_canary || {};
+    const canaryClass = canary.enabled ? 'enabled' : 'disabled';
+    html += `
+        <div class="hardening-item ${canaryClass}">
+            <div class="check-icon">
+                <i class="fas ${canary.enabled ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            </div>
+            <div class="check-details">
+                <strong>Stack Canary</strong>
+                <span class="check-status">${canary.enabled ? 'Present' : 'Not Found'}</span>
+                <p class="check-desc">${canary.description || ''}</p>
+            </div>
+        </div>
+    `;
+    
+    // Fortify
+    const fortify = hardening.fortify || {};
+    const fortifyClass = fortify.enabled ? 'enabled' : 'disabled';
+    html += `
+        <div class="hardening-item ${fortifyClass}">
+            <div class="check-icon">
+                <i class="fas ${fortify.enabled ? 'fa-check-circle' : 'fa-times-circle'}"></i>
+            </div>
+            <div class="check-details">
+                <strong>FORTIFY_SOURCE</strong>
+                <span class="check-status">${fortify.enabled ? 'Present' : 'Not Found'}</span>
+                <p class="check-desc">${fortify.description || ''}</p>
+            </div>
+        </div>
+    `;
+    
+    html += '</div>';
+    
+    // RPATH warning
+    const rpath = hardening.rpath || {};
+    if (rpath.has_rpath || rpath.has_runpath) {
+        html += `
+            <div class="elf-warning">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Custom Library Paths:</strong>
+                ${rpath.rpath ? `RPATH: ${rpath.rpath}` : ''}
+                ${rpath.runpath ? `RUNPATH: ${rpath.runpath}` : ''}
+                <p>This may allow library hijacking attacks.</p>
+            </div>
+        `;
+    }
+    
+    return html;
+}
+
+// Generate ELF Packer Detection HTML
+function generateELFPackerHTML(packer) {
+    let html = '';
+    
+    // Packing status banner
+    const isPacked = packer.is_packed || false;
+    const packersDetected = packer.packers_detected || [];
+    
+    if (isPacked) {
+        html += `
+            <div class="packer-detected">
+                <i class="fas fa-box"></i>
+                <div>
+                    <strong>Packing/Obfuscation Detected</strong>
+                    ${packersDetected.length > 0 ? `<p>Packers: ${packersDetected.join(', ')}</p>` : ''}
+                </div>
+            </div>
+        `;
+    } else {
+        html += `
+            <div class="packer-clean">
+                <i class="fas fa-check-circle"></i>
+                <strong>No Packing Detected</strong>
+            </div>
+        `;
+    }
+    
+    // Indicators
+    const indicators = packer.indicators || [];
+    if (indicators.length > 0) {
+        html += `
+            <div class="packer-indicators">
+                <h4><i class="fas fa-search"></i> Detection Indicators (${indicators.length})</h4>
+                <ul class="indicator-list">
+        `;
+        
+        indicators.forEach(ind => {
+            const iconClass = ind.type === 'signature' ? 'fa-fingerprint' : 
+                             ind.type === 'high_entropy_region' ? 'fa-chart-line' :
+                             ind.type === 'stripped_symbols' ? 'fa-eraser' :
+                             ind.type === 'segment_expansion' ? 'fa-expand' :
+                             'fa-exclamation-circle';
+            
+            html += `
+                <li class="indicator-item">
+                    <i class="fas ${iconClass}"></i>
+                    <span>${ind.description || ind.type}</span>
+                </li>
+            `;
+        });
+        
+        html += '</ul></div>';
+    }
+    
+    // Stripped info
+    const stripped = packer.stripped_info || {};
+    if (stripped.stripped) {
+        html += `
+            <div class="elf-warning">
+                <i class="fas fa-eraser"></i>
+                <strong>Symbols Stripped:</strong> ${stripped.description || 'Symbol tables have been removed'}
+            </div>
+        `;
     }
     
     return html;
@@ -2436,4 +3423,828 @@ function generatePEStructureHTML(peStructure) {
     }
     
     return html;
+}
+
+
+// ============================================
+// RELATIONAL GRAPH & AI REPORT FUNCTIONALITY
+// ============================================
+
+// Graph instance
+let graphInstance = null;
+let currentGraphData = null;
+
+// Initialize button event listeners when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    // Relational Graph Button
+    const btnGraph = document.getElementById('btnRelationalGraph');
+    if (btnGraph) {
+        btnGraph.addEventListener('click', handleRelationalGraph);
+    }
+    
+    // Generate Report Button
+    const btnReport = document.getElementById('btnGenerateReport');
+    if (btnReport) {
+        btnReport.addEventListener('click', handleGenerateReport);
+    }
+    
+    // Modal close buttons
+    const closeGraphModal = document.getElementById('closeGraphModal');
+    if (closeGraphModal) {
+        closeGraphModal.addEventListener('click', () => {
+            document.getElementById('graphModal').style.display = 'none';
+            if (graphInstance) {
+                graphInstance.destroy();
+                graphInstance = null;
+            }
+        });
+    }
+    
+    const closeReportModal = document.getElementById('closeReportModal');
+    if (closeReportModal) {
+        closeReportModal.addEventListener('click', () => {
+            document.getElementById('reportModal').style.display = 'none';
+        });
+    }
+    
+    // Copy Report Button
+    const btnCopyReport = document.getElementById('btnCopyReport');
+    if (btnCopyReport) {
+        btnCopyReport.addEventListener('click', copyReportToClipboard);
+    }
+    
+    // Download Report Button
+    const btnDownloadReport = document.getElementById('btnDownloadReport');
+    if (btnDownloadReport) {
+        btnDownloadReport.addEventListener('click', downloadReport);
+    }
+    
+    // Close modals when clicking outside
+    document.getElementById('graphModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'graphModal') {
+            document.getElementById('graphModal').style.display = 'none';
+            if (graphInstance) {
+                graphInstance.destroy();
+                graphInstance = null;
+            }
+        }
+    });
+    
+    document.getElementById('reportModal')?.addEventListener('click', (e) => {
+        if (e.target.id === 'reportModal') {
+            document.getElementById('reportModal').style.display = 'none';
+        }
+    });
+});
+
+
+// Handle Relational Graph Button Click
+async function handleRelationalGraph() {
+    const analysisData = window.currentAnalysisData;
+    
+    if (!analysisData) {
+        showNotification('No analysis data available. Please upload a file first.', 'error');
+        return;
+    }
+    
+    // Show modal with loading state
+    const modal = document.getElementById('graphModal');
+    const container = document.getElementById('graphContainer');
+    const sidebar = document.getElementById('graphNodeDetails');
+    
+    modal.style.display = 'flex';
+    container.innerHTML = '<div class="report-loading"><div class="spinner"></div><p>Building relational graph...</p></div>';
+    sidebar.innerHTML = '<div class="empty-node-state"><i class="fas fa-mouse-pointer"></i><p>Click on a node to see details</p></div>';
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/generate-graph', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ analysis_data: analysisData })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            container.innerHTML = `<div class="report-error"><i class="fas fa-exclamation-triangle"></i><h3>Failed to Generate Graph</h3><p>${result.message || 'Unknown error'}</p></div>`;
+            return;
+        }
+        
+        currentGraphData = result.graph;
+        window.currentGraphData = result.graph;  // Make available for node explanations
+        renderGraph(result.graph, container, sidebar);
+        
+    } catch (error) {
+        console.error('Graph generation error:', error);
+        container.innerHTML = `<div class="report-error"><i class="fas fa-exclamation-triangle"></i><h3>Error</h3><p>${error.message}</p></div>`;
+    }
+}
+
+
+// Render Cytoscape Graph
+function renderGraph(graphData, container, sidebar) {
+    container.innerHTML = '';
+    
+    // Add legend
+    const legend = document.createElement('div');
+    legend.className = 'graph-legend';
+    legend.innerHTML = `
+        <h4>Risk Level</h4>
+        <div class="legend-items">
+            <div class="legend-item"><div class="legend-color critical"></div>Critical</div>
+            <div class="legend-item"><div class="legend-color high"></div>High</div>
+            <div class="legend-item"><div class="legend-color medium"></div>Medium</div>
+            <div class="legend-item"><div class="legend-color low"></div>Low/Safe</div>
+            <div class="legend-item"><div class="legend-color info"></div>Info</div>
+        </div>
+    `;
+    container.appendChild(legend);
+    
+    // Add controls
+    const controls = document.createElement('div');
+    controls.className = 'graph-controls';
+    controls.innerHTML = `
+        <button class="graph-control-btn" id="graphZoomIn" title="Zoom In"><i class="fas fa-plus"></i></button>
+        <button class="graph-control-btn" id="graphZoomOut" title="Zoom Out"><i class="fas fa-minus"></i></button>
+        <button class="graph-control-btn" id="graphFit" title="Fit to View"><i class="fas fa-expand"></i></button>
+        <button class="graph-control-btn" id="graphCenter" title="Center"><i class="fas fa-crosshairs"></i></button>
+    `;
+    container.appendChild(controls);
+    
+    // Risk level to color mapping
+    const riskColors = {
+        'critical': '#ef4444',
+        'high': '#f97316',
+        'medium': '#eab308',
+        'low': '#22c55e',
+        'safe': '#22c55e',
+        'info': '#3b82f6'
+    };
+    
+    // Node type to shape mapping - cleaner, more consistent shapes
+    const nodeShapes = {
+        'file': 'round-rectangle',
+        'hash': 'round-rectangle',
+        'entropy': 'round-rectangle',
+        'risk': 'round-rectangle',
+        'indicator_group': 'round-rectangle',
+        'indicator': 'round-rectangle',
+        'pe_info': 'round-rectangle',
+        'elf_info': 'round-rectangle',
+        'pdf_info': 'round-rectangle',
+        'office_info': 'round-rectangle',
+        'sections': 'round-rectangle',
+        'section': 'round-rectangle',
+        'api_group': 'round-rectangle',
+        'api': 'round-rectangle',
+        'packer': 'round-rectangle',
+        'javascript': 'round-rectangle',
+        'auto_action': 'round-rectangle',
+        'embedded': 'round-rectangle',
+        'obfuscation': 'round-rectangle',
+        'security': 'round-rectangle',
+        'function_group': 'round-rectangle',
+        'function': 'round-rectangle',
+        'macro': 'round-rectangle',
+        'auto_execute': 'round-rectangle',
+        'keywords': 'round-rectangle',
+        'urls': 'round-rectangle',
+        'capabilities': 'round-rectangle',
+        'namespace': 'round-rectangle',
+        'capability': 'round-rectangle',
+        'virustotal': 'round-rectangle',
+        'detection': 'round-rectangle',
+        'ips': 'round-rectangle',
+        'registry': 'round-rectangle'
+    };
+
+    // Node type to icon emoji mapping
+    const nodeIcons = {
+        'file': '📄',
+        'hash': '🔐',
+        'entropy': '📊',
+        'risk': '⚠️',
+        'indicator_group': '🔍',
+        'indicator': '🔸',
+        'pe_info': '💻',
+        'elf_info': '🐧',
+        'pdf_info': '📕',
+        'office_info': '📎',
+        'sections': '📁',
+        'section': '📂',
+        'api_group': '⚙️',
+        'api': '🔧',
+        'packer': '📦',
+        'javascript': '📜',
+        'auto_action': '⚡',
+        'embedded': '📎',
+        'obfuscation': '🔒',
+        'security': '🛡️',
+        'function_group': '📋',
+        'function': '🔹',
+        'macro': '⚠️',
+        'auto_execute': '🚀',
+        'keywords': '🏷️',
+        'urls': '🔗',
+        'capabilities': '🎯',
+        'namespace': '📂',
+        'capability': '✨',
+        'virustotal': '🦠',
+        'detection': '🚨',
+        'ips': '🌐',
+        'registry': '📝'
+    };
+    
+    // Prepare elements with icons
+    const elements = [
+        ...graphData.nodes.map(n => ({
+            data: {
+                id: n.id,
+                label: n.label,
+                type: n.type,
+                risk: n.risk_level || 'info',
+                nodeData: n.data,
+                icon: nodeIcons[n.type] || '📌'
+            }
+        })),
+        ...graphData.edges.map(e => ({
+            data: {
+                id: e.id,
+                source: e.source,
+                target: e.target,
+                label: e.label || e.type
+            }
+        }))
+    ];
+    
+    // Create Cytoscape instance
+    graphInstance = cytoscape({
+        container: container,
+        elements: elements,
+        style: [
+            {
+                selector: 'node',
+                style: {
+                    'background-color': '#ffffff',
+                    'border-width': 2,
+                    'border-color': function(ele) {
+                        return riskColors[ele.data('risk')] || '#3b82f6';
+                    },
+                    'width': 50,
+                    'height': 50,
+                    'label': function(ele) {
+                        return ele.data('icon') + '\n' + ele.data('label');
+                    },
+                    'color': '#334155',
+                    'font-family': 'Inter, sans-serif',
+                    'font-size': '9px',
+                    'font-weight': '500',
+                    'text-valign': 'bottom',
+                    'text-halign': 'center',
+                    'text-margin-y': 6,
+                    'text-wrap': 'wrap',
+                    'text-max-width': 100,
+                    'text-background-opacity': 0.95,
+                    'text-background-color': '#ffffff',
+                    'text-background-padding': '4px',
+                    'text-background-shape': 'round-rectangle',
+                    'shape': 'round-rectangle',
+                    'transition-property': 'border-color, border-width, width, height, background-color',
+                    'transition-duration': '0.2s',
+                    'shadow-blur': 8,
+                    'shadow-color': 'rgba(0, 0, 0, 0.1)',
+                    'shadow-offset-x': 0,
+                    'shadow-offset-y': 2,
+                    'shadow-opacity': 1
+                }
+            },
+            {
+                selector: 'node[type="file"]',
+                style: {
+                    'width': 70,
+                    'height': 70,
+                    'font-size': '11px',
+                    'font-weight': '600',
+                    'background-color': '#8519d5',
+                    'color': '#ffffff',
+                    'text-background-color': '#8519d5',
+                    'text-background-opacity': 0.9,
+                    'border-width': 3,
+                    'border-color': '#6b21a8'
+                }
+            },
+            {
+                selector: 'node[risk="critical"]',
+                style: {
+                    'background-color': '#fef2f2',
+                    'border-color': '#ef4444'
+                }
+            },
+            {
+                selector: 'node[risk="high"]',
+                style: {
+                    'background-color': '#fff7ed',
+                    'border-color': '#f97316'
+                }
+            },
+            {
+                selector: 'node[risk="medium"]',
+                style: {
+                    'background-color': '#fefce8',
+                    'border-color': '#eab308'
+                }
+            },
+            {
+                selector: 'node[risk="low"], node[risk="safe"]',
+                style: {
+                    'background-color': '#f0fdf4',
+                    'border-color': '#22c55e'
+                }
+            },
+            {
+                selector: 'node[risk="info"]',
+                style: {
+                    'background-color': '#eff6ff',
+                    'border-color': '#3b82f6'
+                }
+            },
+            {
+                selector: 'edge',
+                style: {
+                    'width': 1.5,
+                    'line-color': '#94a3b8',
+                    'target-arrow-color': '#64748b',
+                    'target-arrow-shape': 'triangle',
+                    'curve-style': 'bezier',
+                    'label': 'data(label)',
+                    'font-size': '8px',
+                    'font-weight': '500',
+                    'color': '#475569',
+                    'text-rotation': 'autorotate',
+                    'text-margin-y': -8,
+                    'arrow-scale': 1,
+                    'font-family': 'Inter, sans-serif',
+                    'text-background-opacity': 0.9,
+                    'text-background-color': '#ffffff',
+                    'text-background-padding': '2px',
+                    'text-background-shape': 'round-rectangle'
+                }
+            },
+            {
+                selector: 'node:selected',
+                style: {
+                    'background-color': '#f3e8ff',
+                    'border-color': '#8519d5',
+                    'border-width': 3,
+                    'shadow-blur': 15,
+                    'shadow-color': 'rgba(133, 25, 213, 0.4)',
+                    'shadow-opacity': 1
+                }
+            },
+            {
+                selector: 'edge:selected',
+                style: {
+                    'line-color': '#8519d5',
+                    'target-arrow-color': '#8519d5',
+                    'width': 2.5
+                }
+            }
+        ],
+        layout: {
+            name: 'cose',
+            padding: 50,
+            nodeRepulsion: 8000,
+            idealEdgeLength: 100,
+            edgeElasticity: 100,
+            nestingFactor: 1.2,
+            gravity: 0.25,
+            numIter: 1000,
+            animate: true,
+            animationDuration: 1000,
+            randomize: false
+        },
+        wheelSensitivity: 0.15,
+        minZoom: 0.2,
+        maxZoom: 3
+    });
+    
+    // Node click handler
+    graphInstance.on('tap', 'node', function(evt) {
+        const node = evt.target;
+        displayNodeDetails(node, sidebar);
+    });
+    
+    // Control button handlers
+    document.getElementById('graphZoomIn')?.addEventListener('click', () => {
+        graphInstance.zoom(graphInstance.zoom() * 1.2);
+    });
+    
+    document.getElementById('graphZoomOut')?.addEventListener('click', () => {
+        graphInstance.zoom(graphInstance.zoom() / 1.2);
+    });
+    
+    document.getElementById('graphFit')?.addEventListener('click', () => {
+        graphInstance.fit(50);
+    });
+    
+    document.getElementById('graphCenter')?.addEventListener('click', () => {
+        graphInstance.center();
+    });
+    
+    // Mouse cursor change on hover
+    graphInstance.on('mouseover', 'node', () => {
+        container.style.cursor = 'pointer';
+    });
+    
+    graphInstance.on('mouseout', 'node', () => {
+        container.style.cursor = 'default';
+    });
+}
+
+
+// Display Node Details in Sidebar
+function displayNodeDetails(node, sidebar) {
+    const nodeId = node.id();
+    const nodeLabel = node.data('label');
+    const nodeType = node.data('type');
+    const nodeRisk = node.data('risk');
+    const nodeIcon = node.data('icon') || '📌';
+    const nodeData = node.data('nodeData') || {};
+    
+    // Clean the label (remove emoji prefix if present)
+    const cleanLabel = nodeLabel.replace(/^[\u{1F300}-\u{1F9FF}][\n\r]*/u, '').trim();
+    
+    // Format display value helper
+    function formatValue(value, key) {
+        if (value === null || value === undefined) return 'N/A';
+        
+        if (Array.isArray(value)) {
+            if (value.length === 0) return 'None';
+            if (value.length <= 3) return value.join(', ');
+            return value.slice(0, 3).join(', ') + ` (+${value.length - 3} more)`;
+        }
+        
+        if (typeof value === 'object') {
+            // Special handling for known object types
+            if (value.name) return value.name;
+            if (value.description) return value.description;
+            if (value.value) return value.value;
+            
+            const keys = Object.keys(value);
+            if (keys.length === 0) return 'None';
+            if (keys.length <= 2) {
+                return keys.map(k => `${k}: ${value[k]}`).join(', ');
+            }
+            return `${keys.length} properties`;
+        }
+        
+        if (typeof value === 'boolean') {
+            return value ? '✓ Yes' : '✗ No';
+        }
+        
+        if (typeof value === 'number') {
+            // Format scores nicely
+            if (key.toLowerCase().includes('score')) {
+                return value.toFixed(1);
+            }
+            return value.toString();
+        }
+        
+        if (typeof value === 'string') {
+            if (value.length > 60) {
+                return value.substring(0, 57) + '...';
+            }
+            return value;
+        }
+        
+        return String(value);
+    }
+    
+    // Pretty label for keys
+    function prettyKey(key) {
+        return key
+            .replace(/_/g, ' ')
+            .replace(/([A-Z])/g, ' $1')
+            .replace(/^./, str => str.toUpperCase())
+            .trim();
+    }
+    
+    let html = `
+        <div class="node-detail-card">
+            <h3>${nodeIcon} ${escapeHtml(cleanLabel)}</h3>
+            <span class="node-type-badge risk-${nodeRisk}">${nodeType.replace(/_/g, ' ').toUpperCase()}</span>
+            
+            <div class="node-data-list">
+                <div class="node-data-item">
+                    <span class="node-data-label">Type</span>
+                    <span class="node-data-value">${nodeType}</span>
+                </div>
+                <div class="node-data-item">
+                    <span class="node-data-label">Risk Level</span>
+                    <span class="node-data-value">${nodeRisk}</span>
+                </div>
+    `;
+    
+    // Add additional data items with better formatting
+    const skipKeys = ['record', 'full_text', 'full', 'id', 'node_id'];
+    for (const [key, value] of Object.entries(nodeData)) {
+        if (value !== null && value !== undefined && !skipKeys.includes(key.toLowerCase())) {
+            const displayValue = formatValue(value, key);
+            const displayKey = prettyKey(key);
+            
+            html += `
+                <div class="node-data-item">
+                    <span class="node-data-label">${displayKey}</span>
+                    <span class="node-data-value">${escapeHtml(String(displayValue))}</span>
+                </div>
+            `;
+        }
+    }
+    
+    // Show full description if available
+    if (nodeData.full_text || nodeData.full) {
+        const fullDesc = nodeData.full_text || nodeData.full;
+        html += `
+            <div class="node-data-item" style="flex-direction: column; gap: 4px;">
+                <span class="node-data-label">Description</span>
+                <span class="node-data-value" style="text-align: left;">${escapeHtml(String(fullDesc).substring(0, 150))}</span>
+            </div>
+        `;
+    }
+    
+    html += '</div></div>';
+    
+    // Get connected edges
+    const connectedEdges = node.connectedEdges();
+    if (connectedEdges.length > 0) {
+        html += `
+            <div class="node-detail-card">
+                <h3><i class="fas fa-link"></i> Connections (${connectedEdges.length})</h3>
+                <div class="node-data-list">
+        `;
+        
+        connectedEdges.forEach(edge => {
+            const isSource = edge.source().id() === nodeId;
+            const connectedNode = isSource ? edge.target() : edge.source();
+            const direction = isSource ? '→' : '←';
+            const connectedLabel = connectedNode.data('label')
+                .replace(/^[\u{1F300}-\u{1F9FF}][\n\r]*/u, '')
+                .trim()
+                .substring(0, 25);
+            
+            html += `
+                <div class="node-data-item">
+                    <span class="node-data-label">${edge.data('label')}</span>
+                    <span class="node-data-value">${direction} ${connectedLabel}</span>
+                </div>
+            `;
+        });
+        
+        html += '</div></div>';
+    }
+    
+    // Add AI Explanation section
+    html += `
+        <div class="node-detail-card ai-explanation-card">
+            <h3><i class="fas fa-robot"></i> AI Analysis</h3>
+            <div id="nodeExplanation" class="node-explanation">
+                <button class="btn-explain" onclick="getNodeExplanation('${nodeId}', '${nodeType}', '${cleanLabel}', '${nodeRisk}')">
+                    <i class="fas fa-magic"></i> Generate AI Explanation
+                </button>
+            </div>
+        </div>
+    `;
+    
+    sidebar.innerHTML = html;
+    
+    // Store current node data for explanation
+    window.currentNodeForExplanation = {
+        id: nodeId,
+        type: nodeType,
+        label: cleanLabel,
+        risk: nodeRisk,
+        data: nodeData
+    };
+}
+
+
+// Get AI Explanation for a node
+async function getNodeExplanation(nodeId, nodeType, nodeLabel, nodeRisk) {
+    const explanationDiv = document.getElementById('nodeExplanation');
+    const nodeData = window.currentNodeForExplanation?.data || {};
+    
+    // Show loading state
+    explanationDiv.innerHTML = `
+        <div class="explanation-loading">
+            <div class="spinner-small"></div>
+            <span>Analyzing with AI...</span>
+        </div>
+    `;
+    
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch('/api/explain-node', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                node_id: nodeId,
+                node_data: {
+                    type: nodeType,
+                    label: nodeLabel,
+                    risk: nodeRisk,
+                    data: nodeData
+                },
+                graph_data: window.currentGraphData || null
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.explanation) {
+            // Display the explanation with markdown formatting
+            explanationDiv.innerHTML = `
+                <div class="ai-explanation-content">
+                    ${marked.parse(result.explanation)}
+                </div>
+                <button class="btn-explain-refresh" onclick="getNodeExplanation('${nodeId}', '${nodeType}', '${nodeLabel}', '${nodeRisk}')">
+                    <i class="fas fa-sync-alt"></i> Regenerate
+                </button>
+            `;
+        } else {
+            explanationDiv.innerHTML = `
+                <div class="explanation-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>${result.message || 'Failed to generate explanation'}</p>
+                    <button class="btn-explain" onclick="getNodeExplanation('${nodeId}', '${nodeType}', '${nodeLabel}', '${nodeRisk}')">
+                        <i class="fas fa-redo"></i> Try Again
+                    </button>
+                </div>
+            `;
+        }
+    } catch (error) {
+        console.error('Error getting node explanation:', error);
+        explanationDiv.innerHTML = `
+            <div class="explanation-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <p>Error: ${error.message}</p>
+                <button class="btn-explain" onclick="getNodeExplanation('${nodeId}', '${nodeType}', '${nodeLabel}', '${nodeRisk}')">
+                    <i class="fas fa-redo"></i> Try Again
+                </button>
+            </div>
+        `;
+    }
+}
+
+
+// Handle Generate Report Button Click
+async function handleGenerateReport() {
+    const analysisData = window.currentAnalysisData;
+    
+    if (!analysisData) {
+        showNotification('No analysis data available. Please upload a file first.', 'error');
+        return;
+    }
+    
+    // Show modal with loading state
+    const modal = document.getElementById('reportModal');
+    const content = document.getElementById('reportContent');
+    
+    modal.style.display = 'flex';
+    content.innerHTML = `
+        <div class="report-loading">
+            <div class="spinner"></div>
+            <p>Generating AI report...</p>
+            <p class="report-loading-hint">This may take a moment. Ollama is analyzing the file.</p>
+        </div>
+    `;
+    
+    try {
+        // First check if Ollama is available
+        const ollamaCheck = await fetch('http://localhost:5000/api/check-ollama');
+        const ollamaStatus = await ollamaCheck.json();
+        
+        if (!ollamaStatus.available) {
+            content.innerHTML = `
+                <div class="report-error">
+                    <i class="fas fa-server"></i>
+                    <h3>Ollama Not Available</h3>
+                    <p>The AI service (Ollama) is not running. Please start Ollama with the llama3.2:3b model and try again.</p>
+                    <p style="margin-top: 1rem; font-family: monospace; color: #64748b;">ollama run llama3.2:3b</p>
+                    <button class="btn-retry" onclick="handleGenerateReport()">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:5000/api/generate-report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ 
+                analysis_data: analysisData,
+                language: 'english'
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            content.innerHTML = `
+                <div class="report-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Failed to Generate Report</h3>
+                    <p>${result.message || 'Unknown error occurred while generating the report.'}</p>
+                    <button class="btn-retry" onclick="handleGenerateReport()">
+                        <i class="fas fa-redo"></i> Retry
+                    </button>
+                </div>
+            `;
+            return;
+        }
+        
+        // Store report for download/copy
+        window.currentReport = result.report;
+        
+        // Render markdown report
+        const htmlReport = marked.parse(result.report);
+        content.innerHTML = `
+            <div class="report-markdown">
+                ${htmlReport}
+            </div>
+            <div style="text-align: center; padding: 2rem; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 2rem;">
+                <p style="color: #64748b; font-size: 0.85rem;">
+                    Generated by ${result.model_used || 'AI'} at ${new Date(result.generated_at).toLocaleString()}
+                </p>
+            </div>
+        `;
+        
+        showNotification('AI report generated successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Report generation error:', error);
+        content.innerHTML = `
+            <div class="report-error">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Error</h3>
+                <p>${error.message}</p>
+                <button class="btn-retry" onclick="handleGenerateReport()">
+                    <i class="fas fa-redo"></i> Retry
+                </button>
+            </div>
+        `;
+    }
+}
+
+
+// Copy Report to Clipboard
+function copyReportToClipboard() {
+    if (!window.currentReport) {
+        showNotification('No report to copy', 'error');
+        return;
+    }
+    
+    navigator.clipboard.writeText(window.currentReport).then(() => {
+        showNotification('Report copied to clipboard!', 'success');
+    }).catch(err => {
+        console.error('Copy failed:', err);
+        showNotification('Failed to copy report', 'error');
+    });
+}
+
+
+// Download Report as Markdown
+function downloadReport() {
+    if (!window.currentReport) {
+        showNotification('No report to download', 'error');
+        return;
+    }
+    
+    const analysisData = window.currentAnalysisData || {};
+    const filename = analysisData.filename || 'malware_analysis';
+    const safeFilename = filename.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+    
+    const blob = new Blob([window.currentReport], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeFilename}_report.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    showNotification('Report downloaded!', 'success');
 }

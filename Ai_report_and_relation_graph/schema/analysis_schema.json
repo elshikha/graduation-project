@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "sample_id": "",
+    "file_type": "",
+    "analysis_time": "",
+    "analyst": "automated-system"
+  },
+
+  "static_analysis": {
+    "entropy": 0.0,
+    "suspicious_strings": [],
+    "detected_apis": [],
+    "file_features": []
+  },
+
+  "behavioral_indicators": {
+    "process_activity": [],
+    "registry_modifications": [],
+    "file_operations": [],
+    "network_connections": []
+  },
+
+  "signature_detection": {
+    "yara_matches": [],
+    "sigma_matches": []
+  },
+
+  "risk_assessment": {
+    "risk_level": "",
+    "confidence": 0.0
+  }
+}

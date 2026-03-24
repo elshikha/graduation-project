@@ -1,0 +1,55 @@
+{
+    "metadata": {
+        "sample_id": "AR-SAMPLE-001",
+        "file_type": "Exec (MSI)",
+        "analysis_time": "2026-02-13T17:30:00Z",
+        "analyst": "antigravity-ai"
+    },
+    "static_analysis": {
+        "entropy": 7.8,
+        "suspicious_strings": [
+            "https://secure-update-serv.net/api/v1/auth",
+            "powershell.exe -ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden"
+        ],
+        "detected_apis": [
+            "LdrLoadDll",
+            "NtCreateSection",
+            "NtMapViewOfSection",
+            "SetThreadContext"
+        ],
+        "file_features": [
+            "Packed (UPX)",
+            "Anti-Debugging Hooks",
+            "Self-Signing Certificate (Invalid)"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [
+            "Spawned rundll32.exe with suspicious parameters",
+            "Injected code into svchost.exe"
+        ],
+        "registry_modifications": [
+            "HKLM\\System\\CurrentControlSet\\Services\\SharedAccess\\Parameters\\FirewallPolicy\\StandardProfile"
+        ],
+        "file_operations": [
+            "Created encrypted blob in C:\\ProgramData\\Temp",
+            "Deleted shadow copies (vssadmin.exe)"
+        ],
+        "network_connections": [
+            "91.239.24.10"
+        ]
+    },
+    "signature_detection": {
+        "yara_matches": [
+            "Hollow_Process",
+            "Ransomware_Behavior"
+        ],
+        "sigma_matches": [
+            "Suspicious Process Injection"
+        ]
+    },
+    "risk_assessment": {
+        "risk_level": "HIGH",
+        "confidence": 0.98
+    }
+}

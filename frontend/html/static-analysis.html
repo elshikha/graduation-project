@@ -9,6 +9,8 @@
     <link rel="stylesheet" type="text/css" href="../css/dashboard.css" />
     <link rel="stylesheet" type="text/css" href="../css/static-analysis.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://unpkg.com/cytoscape/dist/cytoscape.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script src="../js/funny-loader.js"></script>
 </head>
 <body>
@@ -251,7 +253,7 @@
                     </div>
                 </div>
 
-                <!-- CAPA Capability Analysis Card (shown only for PE files) -->
+                <!-- CAPA Capability Analysis Card (shown for PE and ELF files) -->
                 <div class="info-card" id="capaAnalysisCard" style="display: none;">
                     <div class="card-header" data-toggle="capa-analysis">
                         <h3><i class="fas fa-shield-virus"></i> Capability Analysis</h3>
@@ -273,6 +275,84 @@
                     <div class="card-body collapsible" id="pe-structure-body">
                         <div class="pe-structure-info" id="peStructureInfo">
                             <!-- PE structure analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ELF Header Analysis Card (shown only for ELF files) -->
+                <div class="info-card" id="elfAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="elf-analysis">
+                        <h3><i class="fab fa-linux"></i> ELF Header Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="elf-analysis-body">
+                        <div class="elf-info" id="elfInfo">
+                            <!-- ELF analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ELF Security Hardening Card (shown only for ELF files) -->
+                <div class="info-card" id="elfHardeningCard" style="display: none;">
+                    <div class="card-header" data-toggle="elf-hardening">
+                        <h3><i class="fas fa-shield-alt"></i> Security Hardening</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="elf-hardening-body">
+                        <div class="elf-hardening-info" id="elfHardeningInfo">
+                            <!-- ELF hardening analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ELF Packer Detection Card (shown only for ELF files) -->
+                <div class="info-card" id="elfPackerCard" style="display: none;">
+                    <div class="card-header" data-toggle="elf-packer">
+                        <h3><i class="fas fa-box"></i> Packer & Obfuscation Detection</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="elf-packer-body">
+                        <div class="elf-packer-info" id="elfPackerInfo">
+                            <!-- ELF packer detection content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Office Document Analysis Card (shown only for Office files) -->
+                <div class="info-card" id="officeAnalysisCard" style="display: none;">
+                    <div class="card-header" data-toggle="office-analysis">
+                        <h3><i class="fas fa-file-word"></i> Office Document Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="office-analysis-body">
+                        <div class="office-info" id="officeInfo">
+                            <!-- Office analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Office Macro Analysis Card (shown only for Office files) -->
+                <div class="info-card" id="officeMacroCard" style="display: none;">
+                    <div class="card-header" data-toggle="office-macro">
+                        <h3><i class="fas fa-code"></i> Macro Analysis</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="office-macro-body">
+                        <div class="office-macro-info" id="officeMacroInfo">
+                            <!-- Office macro analysis content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Office URL Analysis Card (shown only for Office files) -->
+                <div class="info-card" id="officeUrlCard" style="display: none;">
+                    <div class="card-header" data-toggle="office-url">
+                        <h3><i class="fas fa-link"></i> URLs & External Links</h3>
+                        <i class="fas fa-chevron-down toggle-arrow"></i>
+                    </div>
+                    <div class="card-body collapsible" id="office-url-body">
+                        <div class="office-url-info" id="officeUrlInfo">
+                            <!-- Office URL analysis content will be inserted here -->
                         </div>
                     </div>
                 </div>
@@ -331,16 +411,68 @@
 
                 <!-- Analysis Actions -->
                 <div class="analysis-actions">
-                    <button class="btn-action btn-primary">
-                        <i class="fas fa-search"></i>
-                        <span>Start Deep Analysis</span>
+                    <button class="btn-action btn-primary" id="btnRelationalGraph">
+                        <i class="fas fa-project-diagram"></i>
+                        <span>Relational Graph</span>
                     </button>
-                    <button class="btn-action btn-secondary">
-                        <i class="fas fa-download"></i>
-                        <span>Export Report</span>
+                    <button class="btn-action btn-secondary" id="btnGenerateReport">
+                        <i class="fas fa-file-alt"></i>
+                        <span>Generate Report</span>
                     </button>
                 </div>
             </section>
+
+            <!-- Relational Graph Modal -->
+            <div id="graphModal" class="modal" style="display: none;">
+                <div class="modal-content graph-modal">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-project-diagram"></i> <span id="graphModalTitle">Relational Graph</span></h2>
+                        <button class="modal-close" id="closeGraphModal">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body graph-modal-body">
+                        <div id="graphContainer"></div>
+                        <div id="graphSidebar" class="graph-sidebar">
+                            <div id="graphNodeDetails" class="graph-node-details">
+                                <div class="empty-node-state">
+                                    <i class="fas fa-mouse-pointer"></i>
+                                    <p>Click on a node to see details</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Report Modal -->
+            <div id="reportModal" class="modal" style="display: none;">
+                <div class="modal-content report-modal">
+                    <div class="modal-header">
+                        <h2><i class="fas fa-file-alt"></i> <span id="reportModalTitle">AI Intelligence Report</span></h2>
+                        <div class="report-actions">
+                            <button class="btn-icon" id="btnCopyReport" title="Copy Report">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button class="btn-icon" id="btnDownloadReport" title="Download Report">
+                                <i class="fas fa-download"></i>
+                            </button>
+                            <button class="modal-close" id="closeReportModal">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="modal-body report-modal-body">
+                        <div id="reportContent" class="report-content">
+                            <div class="report-loading">
+                                <div class="spinner"></div>
+                                <p>Generating AI report...</p>
+                                <p class="report-loading-hint">This may take a moment. Ollama is analyzing the file.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <!-- Warning Message (Initially Hidden) -->
             <div class="warning-message" id="warningMessage" style="display: none;">

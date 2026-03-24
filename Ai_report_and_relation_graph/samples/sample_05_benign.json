@@ -1,0 +1,30 @@
+{
+    "metadata": {
+        "sample_id": "SAMPLE-005",
+        "file_type": "PDF",
+        "analysis_time": "2026-01-24T10:20:00Z",
+        "analyst": "automated-system"
+    },
+    "static_analysis": {
+        "entropy": 4.1,
+        "suspicious_strings": [],
+        "detected_apis": [],
+        "file_features": [
+            "TextOnly"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [],
+        "registry_modifications": [],
+        "file_operations": [],
+        "network_connections": []
+    },
+    "signature_detection": {
+        "yara_matches": [],
+        "sigma_matches": []
+    },
+    "risk_assessment": {
+        "risk_level": "LOW",
+        "confidence": 0.95
+    }
+}

@@ -1,0 +1,49 @@
+{
+    "metadata": {
+        "sample_id": "SAMPLE-001",
+        "file_type": "PDF",
+        "analysis_time": "2026-01-24T10:00:00Z",
+        "analyst": "automated-system"
+    },
+    "static_analysis": {
+        "entropy": 7.4,
+        "suspicious_strings": [
+            "http://malicious-c2.com/payload.exe",
+            "cmd.exe /c powershell"
+        ],
+        "detected_apis": [
+            "VirtualAlloc",
+            "WriteProcessMemory",
+            "CreateRemoteThread"
+        ],
+        "file_features": [
+            "JavaScript",
+            "OpenAction",
+            "EmbeddedFile"
+        ]
+    },
+    "behavioral_indicators": {
+        "process_activity": [
+            "Spawned cmd.exe from pdf reader"
+        ],
+        "registry_modifications": [
+            "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run"
+        ],
+        "file_operations": [
+            "Dropped payload.exe in C:\\Users\\Public"
+        ],
+        "network_connections": [
+            "185.220.101.45"
+        ]
+    },
+    "signature_detection": {
+        "yara_matches": [
+            "Process_Injection"
+        ],
+        "sigma_matches": []
+    },
+    "risk_assessment": {
+        "risk_level": "HIGH",
+        "confidence": 0.92
+    }
+}
